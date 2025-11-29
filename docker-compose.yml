@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15
+    container_name: honeynet-database
+    environment:
+      POSTGRES_USER: honeynet
+      POSTGRES_PASSWORD: G7v!pQ2s#9zLwXrT
+      POSTGRES_DB: honeynet
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "honeynet" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ML Service
+  ml-service:
+    build: ./ml-service
+    container_name: honeynet-ml
+    ports:
+      - "8001:8000"
+    environment:
+      - MODEL_PATH=model/isolation_forest_model.pkl
+      - AE_MODEL_PATH=model/autoencoder_model_colab.keras
+      - NUM_SCALER_PATH=model/num_scaler_colab.pkl
+      - TFIDF_VECTORIZER_PATH=model/tfidf_vectorizer_colab.pkl
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Backend API
+  backend:
+    build: .
+    container_name: honeynet-backend
+    depends_on:
+      database:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://honeynet:G7v!pQ2s#9zLwXrT@database:5432/honeynet
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=honeynet
+      - DB_USER=honeynet
+      - DB_PASSWORD=G7v!pQ2s#9zLwXrT
+      - ML_SERVICE_URL=http://ml-service:8000
+      - COWRIE_LOG_PATH=/mock-data/cowrie.json
+      - CORS_ORIGIN=http://localhost:3001
+      - ENABLE_AUTO_ADAPTATION=true
+      - API_RATE_LIMIT=100
+    volumes:
+      - ./logs:/app/logs
+      - ./mock-data:/mock-data
+      - ./cowrie-logs/cowrie.json:/mock-data/cowrie.json
+    restart: unless-stopped
+
+  # Frontend Dashboard
+  frontend:
+    build: ./frontend
+    container_name: honeynet-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3001:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  default:
+    name: honeynet-network

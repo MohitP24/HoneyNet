@@ -6,7 +6,7 @@ class MLClient {
     this.baseUrl = process.env.ML_SERVICE_URL || 'http://localhost:8001';
     this.timeout = parseInt(process.env.ML_SERVICE_TIMEOUT) || 10000;
     this.isHealthy = false;
-    
+
     // Start health check
     this.checkHealth();
     setInterval(() => this.checkHealth(), 60000); // Check every minute
@@ -18,7 +18,7 @@ class MLClient {
         timeout: 5000
       });
       this.isHealthy = response.status === 200;
-      
+
       if (this.isHealthy) {
         logger.debug('ML service health check: OK');
       }
@@ -36,14 +36,14 @@ class MLClient {
 
     try {
       const payload = this.preparePayload(event);
-      
+
       logger.logML('Sending classification request', {
         event_id: event.id,
         event_type: event.event_type
       });
 
       const response = await axios.post(
-        `${this.baseUrl}/classify`,
+        `${this.baseUrl}/predict`,
         payload,
         {
           timeout: this.timeout,
@@ -54,13 +54,21 @@ class MLClient {
       );
 
       const result = response.data;
-      
+
+      // Map new response format to backend expectations
+      const severity = result.label === 'anomalous' ? 'HIGH' : 'LOW';
+
       logger.logML('Classification received', {
-        severity: result.severity,
-        score: result.anomaly_score
+        severity: severity,
+        score: result.score,
+        explanation: result.explanation
       });
 
-      return result;
+      return {
+        severity: severity,
+        anomaly_score: result.score,
+        details: result.explanation
+      };
     } catch (error) {
       if (error.code === 'ECONNREFUSED') {
         logger.error('ML service connection refused');
@@ -70,23 +78,26 @@ class MLClient {
       } else {
         logger.error('ML classification failed:', error.message);
       }
-      
+
       return null;
     }
   }
 
   preparePayload(event) {
+    // Construct payload for new ML service
+    // Expected: honeypotId, srcIp, event, payload, timestamp
+
+    // Determine payload content based on event type
+    let payloadContent = event.message || '';
+    if (event.command) payloadContent += ` ${event.command}`;
+    if (event.input) payloadContent += ` ${event.input}`;
+
     return {
-      event_id: event.id,
-      event_type: event.event_type,
-      timestamp: event.timestamp,
-      source_ip: event.source_ip,
-      session_id: event.cowrie_session_id,
-      username: event.username,
-      password: event.password,
-      command: event.command,
-      message: event.message,
-      protocol: event.protocol
+      honeypotId: 'cowrie-1',
+      srcIp: event.source_ip || '0.0.0.0',
+      event: event.event_type || 'unknown',
+      payload: payloadContent.trim(),
+      timestamp: event.timestamp || new Date().toISOString()
     };
   }
 }
