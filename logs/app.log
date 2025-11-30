@@ -28,3 +28,80 @@
 {"failed":3,"level":"info","message":"Adaptation recorded","successful":0,"timestamp":"2025-11-29 10:27:33","total":3}
 {"details":{"actions":3},"level":"info","message":"ADAPTATION: Adaptation complete","severity":"HIGH","timestamp":"2025-11-29 10:27:33"}
 {"level":"info","message":"Shutting down gracefully...","timestamp":"2025-11-29 12:22:55"}
+{"level":"info","message":"============================================================","timestamp":"2025-11-30 22:13:57"}
+{"level":"info","message":"============================================================","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"API SAFETY CHECK - Verifying Free Tier Configuration","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"============================================================","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Configuration Summary:","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"------------------------------------------------------------","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ GeoIP (ip-api.com): FREE forever, no API key needed","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Rate limit: 45 requests/minute","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Cost: $0.00 (always free)","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Status: ENABLED (cannot be disabled, caching implemented)","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"ℹ️  IP Reputation (AbuseIPDB): DISABLED","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - To enable: Set ENABLE_REPUTATION_CHECK=true","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Free API key: https://www.abuseipdb.com/register (1000/day forever)","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ Malware Analysis: ENABLED (Static analysis only)","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Static analysis: FREE, no API needed","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Cost: $0.00","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Features: File type, entropy, pattern detection","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Optional: Add VirusTotal key for enhanced scanning","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - Free VT key: https://www.virustotal.com/gui/join-us (500/day)","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"ℹ️  Alerts: DISABLED","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"   - To enable: Set ENABLE_ALERTS=true","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"============================================================","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"💰 COST GUARANTEE: ALL APIS ARE 100% FREE","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"============================================================","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ No credit card required for any service","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ No hidden costs or auto-upgrades","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ All free tiers are permanent","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ Rate limits enforced in code","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"✅ System works with ZERO API keys","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Total monthly cost: $0.00","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Total annual cost: $0.00","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"For detailed API info, see: API_SAFETY_GUARANTEE.md","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"============================================================","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"","timestamp":"2025-11-30 22:15:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"PostgreSQL connected successfully","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Database connected successfully","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Starting log watcher on: ./mock-data/cowrie.json","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Log watcher active","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Log watcher started successfully","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Starting periodic campaign detection","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Campaign detector started successfully","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Starting malware analysis watcher","timestamp":"2025-11-30 22:15:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Malware analyzer started successfully","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Environment: development","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"ML Service: http://localhost:8001","timestamp":"2025-11-30 22:15:23"}
+{"level":"info","message":"Cowrie log: ./mock-data/cowrie.json","timestamp":"2025-11-30 22:15:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:16:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:16:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:17:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:17:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:18:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:18:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:19:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:19:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:20:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:20:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:21:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:21:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:22:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:22:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:23:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:23:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:24:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:24:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:25:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:25:23"}
+{"0":"E","1":"r","2":"r","3":"o","4":"r","level":"warn","message":"ML service health check failed:","timestamp":"2025-11-30 22:26:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:26:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:27:23"}
+{"level":"warn","message":"Downloads directory not found: ./downloads","timestamp":"2025-11-30 22:28:23"}

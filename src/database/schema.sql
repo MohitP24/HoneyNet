@@ -1,6 +1,7 @@
 -- AI-Driven Adaptive Honeynet Database Schema
 
 -- Drop existing tables
+DROP TABLE IF EXISTS attack_campaigns CASCADE;
 DROP TABLE IF EXISTS adaptations CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
 DROP TABLE IF EXISTS attackers CASCADE;
@@ -87,9 +88,23 @@ CREATE TABLE attackers (
     threat_level VARCHAR(20) DEFAULT 'LOW',
     is_blocked BOOLEAN DEFAULT FALSE,
     
-    -- Geolocation (optional)
+    -- Geolocation (enhanced)
     country VARCHAR(100),
+    country_code VARCHAR(10),
+    region VARCHAR(100),
     city VARCHAR(100),
+    latitude FLOAT,
+    longitude FLOAT,
+    timezone VARCHAR(50),
+    isp VARCHAR(255),
+    organization VARCHAR(255),
+    asn VARCHAR(100),
+    
+    -- IP Reputation
+    reputation_score INTEGER DEFAULT 0,
+    is_known_threat BOOLEAN DEFAULT FALSE,
+    threat_categories TEXT[],
+    last_reputation_check TIMESTAMP,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,6 +150,33 @@ CREATE TABLE adaptations (
     ))
 );
 
+-- Attack Campaigns table
+CREATE TABLE attack_campaigns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    campaign_type VARCHAR(50) NOT NULL,
+    indicator TEXT NOT NULL,
+    ip_count INTEGER DEFAULT 0,
+    ip_list TEXT[],
+    first_seen TIMESTAMP NOT NULL,
+    last_seen TIMESTAMP NOT NULL,
+    event_count INTEGER DEFAULT 0,
+    confidence FLOAT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    metadata JSONB,
+    
+    UNIQUE(campaign_type, indicator),
+    CONSTRAINT campaigns_type_check CHECK (campaign_type IN (
+        'COMMAND_PATTERN',
+        'CREDENTIAL_STUFFING',
+        'COORDINATED_TIMING',
+        'NETWORK_CAMPAIGN',
+        'BOTNET',
+        'APT'
+    ))
+);
+
 -- Indexes for performance
 CREATE INDEX idx_events_timestamp ON events(timestamp DESC);
 CREATE INDEX idx_events_source_ip ON events(source_ip);
@@ -155,6 +197,34 @@ CREATE INDEX idx_attackers_last_seen ON attackers(last_seen DESC);
 CREATE INDEX idx_adaptations_timestamp ON adaptations(timestamp DESC);
 CREATE INDEX idx_adaptations_severity ON adaptations(severity);
 CREATE INDEX idx_adaptations_action_type ON adaptations(action_type);
+
+CREATE INDEX idx_campaigns_type ON attack_campaigns(campaign_type);
+CREATE INDEX idx_campaigns_active ON attack_campaigns(is_active);
+CREATE INDEX idx_campaigns_confidence ON attack_campaigns(confidence DESC);
+CREATE INDEX idx_campaigns_last_seen ON attack_campaigns(last_seen DESC);
+
+-- Malware Analysis table
+CREATE TABLE malware_analysis (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    file_name VARCHAR(500) NOT NULL,
+    file_path TEXT NOT NULL,
+    file_size BIGINT NOT NULL,
+    sha256 VARCHAR(64) NOT NULL UNIQUE,
+    md5 VARCHAR(32) NOT NULL,
+    sha1 VARCHAR(40) NOT NULL,
+    file_type VARCHAR(100),
+    is_malicious BOOLEAN DEFAULT FALSE,
+    detection_ratio VARCHAR(20),
+    static_analysis JSONB,
+    virustotal_data JSONB,
+    analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_malware_sha256 ON malware_analysis(sha256);
+CREATE INDEX idx_malware_malicious ON malware_analysis(is_malicious);
+CREATE INDEX idx_malware_analyzed_at ON malware_analysis(analyzed_at DESC);
+CREATE INDEX idx_malware_file_type ON malware_analysis(file_type);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

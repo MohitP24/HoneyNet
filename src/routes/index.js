@@ -3,6 +3,9 @@ const eventsRouter = require('./events');
 const statsRouter = require('./stats');
 const adaptationsRouter = require('./adaptations');
 const attackersRouter = require('./attackers');
+const analyticsRouter = require('./analytics');
+const malwareRouter = require('./malware');
+const exportRouter = require('./export');
 
 const router = express.Router();
 
@@ -11,6 +14,9 @@ router.use('/events', eventsRouter);
 router.use('/stats', statsRouter);
 router.use('/adaptations', adaptationsRouter);
 router.use('/attackers', attackersRouter);
+router.use('/analytics', analyticsRouter);
+router.use('/malware', malwareRouter);
+router.use('/export', exportRouter);
 
 // API info endpoint
 router.get('/', (req, res) => {
@@ -21,7 +27,10 @@ router.get('/', (req, res) => {
       events: '/api/events',
       stats: '/api/stats',
       adaptations: '/api/adaptations',
-      attackers: '/api/attackers'
+      attackers: '/api/attackers',
+      analytics: '/api/analytics',
+      malware: '/api/malware',
+      export: '/api/export'
     }
   });
 });

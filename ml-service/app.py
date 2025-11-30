@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 
 import joblib
-from tensorflow.keras.models import load_model  # ✅ Keras AE load
+from tensorflow.keras.models import load_model  
 
 from features import extract_features
 
@@ -98,7 +98,11 @@ def startup_event():
 # --------------------------
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "models_loaded": if_model is not None and ae_model is not None}
+    return {
+        "status": "healthy",
+        "models_loaded": if_model is not None and ae_model is not None,
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 # --------------------------
 # Prediction Endpoint

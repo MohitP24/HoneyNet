@@ -2,6 +2,9 @@ const db = require('../database/connection');
 const logger = require('../utils/logger');
 const mlClient = require('./mlClient');
 const adaptationService = require('./adaptationService');
+const geoipService = require('./geoipService');
+const alertService = require('./alertService');
+const reputationService = require('./reputationService');
 const { v4: uuidv4 } = require('uuid');
 
 class EventProcessor {
@@ -30,7 +33,15 @@ class EventProcessor {
           score: mlResult.anomaly_score
         });
 
-        // 6. Trigger adaptation if HIGH severity
+        // 6. Send alert for high-severity events
+        if (mlResult.severity === 'HIGH' || mlResult.severity === 'CRITICAL') {
+          const geoInfo = await this.getAttackerGeoInfo(normalizedEvent.source_ip);
+          alertService.sendAlert(normalizedEvent, mlResult, geoInfo).catch(err => {
+            logger.warn('Alert sending failed (non-blocking):', err.message);
+          });
+        }
+
+        // 7. Trigger adaptation if HIGH severity
         if (mlResult.severity === 'HIGH' && process.env.ENABLE_AUTO_ADAPTATION === 'true') {
           await adaptationService.adapt(normalizedEvent, mlResult);
         }
@@ -180,6 +191,16 @@ class EventProcessor {
     ];
 
     await db.query(query, values);
+    
+    // Lookup geo information asynchronously (don't block event processing)
+    geoipService.updateAttackerGeoInfo(event.source_ip).catch(err => {
+      logger.warn('GeoIP lookup failed (non-blocking):', err.message);
+    });
+    
+    // Check IP reputation asynchronously
+    reputationService.updateAttackerReputation(event.source_ip).catch(err => {
+      logger.warn('Reputation check failed (non-blocking):', err.message);
+    });
   }
 
   async incrementAttackerStats(event) {
@@ -227,7 +248,10 @@ class EventProcessor {
       eventId,
       mlResult.severity,
       mlResult.anomaly_score || null,
-      JSON.stringify(mlResult.labels || {}),
+      JSON.stringify({
+        ...mlResult.labels || {},
+        command_analysis: mlResult.command_analysis || null
+      }),
       JSON.stringify(mlResult.features || {})
     ];
 
@@ -249,6 +273,21 @@ class EventProcessor {
     `;
 
     await db.query(query, [eventId]);
+  }
+
+  async getAttackerGeoInfo(ipAddress) {
+    try {
+      const query = 'SELECT country, city, isp, country_code FROM attackers WHERE ip_address = $1';
+      const result = await db.query(query, [ipAddress]);
+      
+      if (result.rows.length > 0) {
+        return result.rows[0];
+      }
+      return null;
+    } catch (error) {
+      logger.error('Error fetching geo info:', error);
+      return null;
+    }
   }
 }
 

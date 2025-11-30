@@ -5,8 +5,11 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
+const apiSafetyChecker = require('./utils/apiSafetyChecker');
 const db = require('./database/connection');
 const logWatcher = require('./services/logWatcher');
+const campaignDetector = require('./services/campaignDetector');
+const malwareAnalyzer = require('./services/malwareAnalysisService');
 const routes = require('./routes');
 
 const app = express();
@@ -81,6 +84,9 @@ process.on('SIGINT', gracefulShutdown);
 // Start server
 const startServer = async () => {
   try {
+    // Run API safety check first
+    apiSafetyChecker.checkAll();
+    
     // Initialize database
     await db.connect();
     logger.info('Database connected successfully');
@@ -88,6 +94,15 @@ const startServer = async () => {
     // Start log watcher
     await logWatcher.start();
     logger.info('Log watcher started successfully');
+    
+    // Start campaign detector
+    await campaignDetector.startPeriodicDetection();
+    logger.info('Campaign detector started successfully');
+    
+    // Start malware analysis watcher
+    const malwareAnalyzer = require('./services/malwareAnalysisService');
+    await malwareAnalyzer.watchDownloadsDirectory();
+    logger.info('Malware analyzer started successfully');
     
     // Start Express server
     app.listen(PORT, () => {

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const commandAnalyzer = require('./commandAnalyzer');
 
 class MLClient {
   constructor() {
@@ -55,19 +56,33 @@ class MLClient {
 
       const result = response.data;
 
+      // Analyze command patterns if command exists
+      let commandAnalysis = null;
+      if (event.command) {
+        commandAnalysis = commandAnalyzer.analyzeCommand(event.command);
+        
+        // Boost severity if command analysis indicates high risk
+        if (commandAnalysis.risk_score >= 70) {
+          result.label = 'anomalous';
+          result.score = Math.max(result.score || 0, 0.85);
+        }
+      }
+
       // Map new response format to backend expectations
       const severity = result.label === 'anomalous' ? 'HIGH' : 'LOW';
 
       logger.logML('Classification received', {
         severity: severity,
         score: result.score,
+        command_risk: commandAnalysis?.risk_score || 0,
         explanation: result.explanation
       });
 
       return {
         severity: severity,
         anomaly_score: result.score,
-        details: result.explanation
+        details: result.explanation,
+        command_analysis: commandAnalysis
       };
     } catch (error) {
       if (error.code === 'ECONNREFUSED') {
