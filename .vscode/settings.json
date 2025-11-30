@@ -1,0 +1,21 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/venv": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/venv": true,
+    "**/__pycache__": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/venv/**": true
+  },
+  "scm.defaultViewMode": "tree",
+  "git.ignoredRepositories": [],
+  "git.ignoreSubmodules": true,
+  "git.untrackedChanges": "hidden"
+}
