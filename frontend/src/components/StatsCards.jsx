@@ -17,25 +17,25 @@ const StatsCards = ({ stats, loading }) => {
     const cards = [
         {
             title: 'Total Events',
-            value: stats?.total_events || 0,
+            value: parseInt(stats?.counts?.total_events) || 0,
             icon: '📊',
             color: 'from-blue-500 to-cyan-500',
         },
         {
             title: 'Active Sessions',
-            value: stats?.active_sessions || 0,
+            value: parseInt(stats?.counts?.active_sessions) || 0,
             icon: '🔄',
             color: 'from-green-500 to-emerald-500',
         },
         {
             title: 'Unique Attackers',
-            value: stats?.unique_attackers || 0,
+            value: parseInt(stats?.counts?.total_attackers) || 0,
             icon: '👤',
             color: 'from-purple-500 to-pink-500',
         },
         {
             title: 'High Severity',
-            value: stats?.severity_distribution?.HIGH || 0,
+            value: parseInt(stats?.severity_distribution?.find(s => s.severity === 'HIGH')?.count) || 0,
             icon: '⚠️',
             color: 'from-red-500 to-orange-500',
         },

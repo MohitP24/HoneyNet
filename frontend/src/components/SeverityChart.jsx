@@ -12,15 +12,31 @@ const SeverityChart = ({ stats, loading }) => {
     }
 
     const severityData = [
-        { name: 'High', value: stats?.severity_distribution?.HIGH || 0, color: '#ef4444' },
-        { name: 'Medium', value: stats?.severity_distribution?.MEDIUM || 0, color: '#f59e0b' },
-        { name: 'Low', value: stats?.severity_distribution?.LOW || 0, color: '#10b981' },
-        { name: 'Unknown', value: stats?.severity_distribution?.UNKNOWN || 0, color: '#64748b' },
+        { 
+            name: 'High', 
+            value: parseInt(stats?.severity_distribution?.find(s => s.severity === 'HIGH')?.count) || 0, 
+            color: '#ef4444' 
+        },
+        { 
+            name: 'Medium', 
+            value: parseInt(stats?.severity_distribution?.find(s => s.severity === 'MEDIUM')?.count) || 0, 
+            color: '#f59e0b' 
+        },
+        { 
+            name: 'Low', 
+            value: parseInt(stats?.severity_distribution?.find(s => s.severity === 'LOW')?.count) || 0, 
+            color: '#10b981' 
+        },
+        { 
+            name: 'Unknown', 
+            value: parseInt(stats?.severity_distribution?.find(s => s.severity === 'UNKNOWN')?.count) || 0, 
+            color: '#64748b' 
+        },
     ];
 
-    const eventTypeData = Object.entries(stats?.event_type_distribution || {}).map(([key, value]) => ({
-        name: key.replace('cowrie.', ''),
-        value: value,
+    const eventTypeData = (stats?.event_type_distribution || []).map(item => ({
+        name: item.event_type.replace('cowrie.', ''),
+        value: parseInt(item.count),
     }));
 
     return (

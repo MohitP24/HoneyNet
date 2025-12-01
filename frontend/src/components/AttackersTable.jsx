@@ -32,10 +32,10 @@ const AttackersTable = ({ attackers, loading }) => {
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                     <span className="text-lg">🎯</span>
-                                    <span className="text-sm font-mono text-white">{attacker.source_ip}</span>
+                                    <span className="text-sm font-mono text-white">{attacker.ip_address}</span>
                                 </div>
                                 <span className="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-400 border border-red-500/30">
-                                    {attacker.event_count || 0} events
+                                    {attacker.total_events || 0} events
                                 </span>
                             </div>
 
@@ -50,10 +50,10 @@ const AttackersTable = ({ attackers, loading }) => {
                                 </div>
                             </div>
 
-                            {attacker.country && (
+                            {attacker.geo_country && (
                                 <div className="mt-2 text-xs">
                                     <span className="text-slate-500">Location:</span>
-                                    <span className="ml-2 text-slate-300">{attacker.country}</span>
+                                    <span className="ml-2 text-slate-300">{attacker.geo_country}</span>
                                 </div>
                             )}
                         </div>

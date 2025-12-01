@@ -18,16 +18,18 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001'
+  origin: process.env.CORS_ORIGIN || ['http://localhost:3001', 'http://localhost:5173']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
+// Rate limiting - relaxed for development/dashboard usage
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.API_RATE_LIMIT) || 100,
-  message: 'Too many requests from this IP'
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: parseInt(process.env.API_RATE_LIMIT) || 100, // 100 requests per minute
+  message: 'Too many requests from this IP',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api/', limiter);
 

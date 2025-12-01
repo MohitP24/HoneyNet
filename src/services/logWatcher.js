@@ -53,7 +53,7 @@ class LogWatcher {
 
       this.tail = new Tail(this.logPath, {
         separator: '\n',
-        fromBeginning: false,
+        fromBeginning: true,
         follow: true,
         useWatchFile: true
       });

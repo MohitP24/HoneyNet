@@ -75,7 +75,7 @@ const Dashboard = () => {
                 {/* Top Attackers */}
                 <div>
                     <AttackersTable
-                        attackers={attackers?.data || []}
+                        attackers={attackers?.attackers || []}
                         loading={attackersLoading}
                     />
                 </div>
@@ -86,7 +86,7 @@ const Dashboard = () => {
                 {/* Recent Events */}
                 <div>
                     <EventsTable
-                        events={events?.data || []}
+                        events={events?.events || []}
                         loading={eventsLoading}
                     />
                 </div>
@@ -94,7 +94,7 @@ const Dashboard = () => {
                 {/* Recent Adaptations */}
                 <div>
                     <AdaptationsLog
-                        adaptations={adaptations?.data || []}
+                        adaptations={adaptations?.adaptations || []}
                         loading={adaptationsLoading}
                     />
                 </div>
