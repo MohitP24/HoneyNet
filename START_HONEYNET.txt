@@ -1,0 +1,45 @@
+==================================
+🍯 AI-HONEYNET STARTUP GUIDE
+==================================
+
+Open 7 PowerShell terminals and run these commands:
+
+📌 TERMINAL 1: Cowrie SSH Honeypot (Port 2222)
+------------------------------------------------
+wsl -d Ubuntu-22.04 -u cowrie -- bash -c "cd ~/cowrie && source cowrie-env/bin/activate && twistd --umask=0022 --pidfile var/run/cowrie.pid --logger cowrie.python.logfile.logger cowrie"
+
+📌 TERMINAL 2: HTTP Honeypot (Port 8080)
+------------------------------------------------
+wsl -d Ubuntu-22.04 -- python3 /mnt/d/boda/AI-Honeynet/HoneyNet/honeypots/http_honeypot.py
+
+📌 TERMINAL 3: FTP Honeypot (Port 2121)
+------------------------------------------------
+wsl -d Ubuntu-22.04 -- python3 /mnt/d/boda/AI-Honeynet/HoneyNet/honeypots/ftp_honeypot.py
+
+📌 TERMINAL 4: Telnet Honeypot (Port 2323)
+------------------------------------------------
+wsl -d Ubuntu-22.04 -- python3 /mnt/d/boda/AI-Honeynet/HoneyNet/honeypots/telnet_honeypot.py
+
+📌 TERMINAL 5: ML Service (Port 8001)
+------------------------------------------------
+cd D:\boda\AI-Honeynet\HoneyNet\ml-service
+& .\venv\Scripts\python.exe -m uvicorn app:app --host 0.0.0.0 --port 8001
+
+📌 TERMINAL 6: Backend (Port 3000)
+------------------------------------------------
+cd D:\boda\AI-Honeynet\HoneyNet
+npm start
+
+📌 TERMINAL 7: Frontend (Port 5173)
+------------------------------------------------
+cd D:\boda\AI-Honeynet\HoneyNet\frontend
+npm run dev
+
+📌 TERMINAL 8 (ADMIN): Port Forwarding
+------------------------------------------------
+.\setup-wsl-port-forward.ps1
+
+==================================
+After all services start, open:
+http://localhost:5173
+==================================

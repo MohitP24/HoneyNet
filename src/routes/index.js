@@ -6,6 +6,7 @@ const attackersRouter = require('./attackers');
 const analyticsRouter = require('./analytics');
 const malwareRouter = require('./malware');
 const exportRouter = require('./export');
+const servicesRouter = require('./services');
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.use('/attackers', attackersRouter);
 router.use('/analytics', analyticsRouter);
 router.use('/malware', malwareRouter);
 router.use('/export', exportRouter);
+router.use('/services', servicesRouter);
 
 // API info endpoint
 router.get('/', (req, res) => {

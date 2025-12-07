@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AttackersTable = ({ attackers, loading }) => {
+const AttackersTable = ({ attackers, loading, onAttackerClick }) => {
     if (loading) {
         return (
             <div className="glass rounded-xl p-6">
@@ -27,7 +27,9 @@ const AttackersTable = ({ attackers, loading }) => {
                     attackers.map((attacker, index) => (
                         <div
                             key={attacker.id || index}
-                            className="glass-hover rounded-lg p-4 border border-slate-700/50"
+                            onClick={() => onAttackerClick && onAttackerClick(attacker.ip_address)}
+                            className="glass-hover rounded-lg p-4 border border-slate-700/50 cursor-pointer hover:border-blue-500/50 transition-all"
+                            title={`Click to filter events from ${attacker.ip_address}`}
                         >
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">

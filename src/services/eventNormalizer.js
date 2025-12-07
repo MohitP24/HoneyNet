@@ -69,12 +69,19 @@ class EventNormalizer {
 
   parseTimestamp(timestamp) {
     if (!timestamp) {
-      return new Date();
+      return new Date().toISOString().replace('Z', '');
     }
 
-    // Cowrie timestamps are ISO format
-    const date = new Date(timestamp);
-    return isNaN(date.getTime()) ? new Date() : date;
+    // Cowrie logs in UTC with Z suffix (e.g., "2025-12-07T17:08:09.134792Z")
+    // Just remove the Z and return the timestamp as-is
+    // PostgreSQL will store it, and frontend will display it correctly
+    if (timestamp.endsWith('Z')) {
+      const utcTimeString = timestamp.slice(0, -1); // Remove 'Z'
+      console.log(`[TIMESTAMP DEBUG] Original UTC: ${timestamp} → Stored: ${utcTimeString}`);
+      return utcTimeString;
+    }
+    
+    return timestamp;
   }
 
   /**

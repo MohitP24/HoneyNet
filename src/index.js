@@ -2,12 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const logger = require('./utils/logger');
 const apiSafetyChecker = require('./utils/apiSafetyChecker');
 const db = require('./database/connection');
 const logWatcher = require('./services/logWatcher');
+const multiHoneypotWatcher = require('./services/dionaeaWatcher');
 const campaignDetector = require('./services/campaignDetector');
 const malwareAnalyzer = require('./services/malwareAnalysisService');
 const routes = require('./routes');
@@ -106,12 +108,18 @@ const startServer = async () => {
     await malwareAnalyzer.watchDownloadsDirectory();
     logger.info('Malware analyzer started successfully');
     
+    // Start multi-honeypot watcher (HTTP, FTP, Telnet)
+    multiHoneypotWatcher.start().catch(err => {
+      logger.warn('Multi-honeypot watcher not started:', err.message);
+    });
+    
     // Start Express server
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
       logger.info(`ML Service: ${process.env.ML_SERVICE_URL}`);
       logger.info(`Cowrie log: ${process.env.COWRIE_LOG_PATH}`);
+      logger.info(`Honeynet services: HTTP, FTP, Telnet watchers active`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

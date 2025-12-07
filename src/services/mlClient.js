@@ -5,7 +5,7 @@ const commandAnalyzer = require('./commandAnalyzer');
 class MLClient {
   constructor() {
     this.baseUrl = process.env.ML_SERVICE_URL || 'http://localhost:8001';
-    this.timeout = parseInt(process.env.ML_SERVICE_TIMEOUT) || 10000;
+    this.timeout = parseInt(process.env.ML_SERVICE_TIMEOUT) || 60000; // 60 seconds for TensorFlow warm-up
     this.isHealthy = false;
 
     // Start health check
@@ -68,8 +68,15 @@ class MLClient {
         }
       }
 
-      // Map new response format to backend expectations
-      const severity = result.label === 'anomalous' ? 'HIGH' : 'LOW';
+      // Map new response format to backend expectations with MEDIUM threshold
+      let severity;
+      if (result.score >= 0.7) {
+        severity = 'HIGH';
+      } else if (result.score >= 0.5) {
+        severity = 'MEDIUM';
+      } else {
+        severity = 'LOW';
+      }
 
       logger.logML('Classification received', {
         severity: severity,
@@ -106,12 +113,16 @@ class MLClient {
     let payloadContent = event.message || '';
     if (event.command) payloadContent += ` ${event.command}`;
     if (event.input) payloadContent += ` ${event.input}`;
+    if (event.input_data) payloadContent += ` ${event.input_data}`;
+
+    // Ensure payloadContent is a string before calling trim
+    const payloadStr = String(payloadContent || '').trim();
 
     return {
       honeypotId: 'cowrie-1',
       srcIp: event.source_ip || '0.0.0.0',
       event: event.event_type || 'unknown',
-      payload: payloadContent.trim(),
+      payload: payloadStr,
       timestamp: event.timestamp || new Date().toISOString()
     };
   }

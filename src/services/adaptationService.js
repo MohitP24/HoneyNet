@@ -15,8 +15,8 @@ class AdaptationService {
     this.cooldownPeriod = parseInt(process.env.ADAPTATION_COOLDOWN) || 300; // 5 minutes
     this.lastAdaptation = null;
     
-    // OS/Banner variations
-    this.bannerTemplates = [
+    // Fallback banner templates (used only if DB query fails)
+    this.fallbackBanners = [
       'SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1',
       'SSH-2.0-OpenSSH_7.4 Red Hat Enterprise Linux',
       'SSH-2.0-OpenSSH_7.9p1 Debian-10+deb10u2',
@@ -24,6 +24,11 @@ class AdaptationService {
       'SSH-2.0-OpenSSH_8.4p1 Raspbian-5+deb11u1',
       'SSH-2.0-OpenSSH_7.6p1 Ubuntu-4ubuntu0.5'
     ];
+    
+    // Banner cache (updated every 10 minutes)
+    this.bannerCache = null;
+    this.lastBannerUpdate = 0;
+    this.bannerCacheDuration = 600000; // 10 minutes
   }
 
   async adapt(event, mlResult) {
@@ -74,6 +79,115 @@ class AdaptationService {
     return elapsed < this.cooldownPeriod;
   }
 
+  /**
+   * Get dynamic banner suggestions based on attacker behavior
+   * Analyzes recent SSH client versions to mimic what attackers expect
+   */
+  async getDynamicBanners() {
+    try {
+      // Check cache first
+      const now = Date.now();
+      if (this.bannerCache && (now - this.lastBannerUpdate) < this.bannerCacheDuration) {
+        return this.bannerCache;
+      }
+
+      // Query top SSH client versions from last 30 days
+      const query = `
+        SELECT 
+          client_version,
+          COUNT(*) as usage_count,
+          COUNT(CASE WHEN successful_login = true THEN 1 END) as successful_attacks,
+          AVG(event_count) as avg_events
+        FROM sessions
+        WHERE 
+          client_version IS NOT NULL 
+          AND client_version != ''
+          AND start_time > NOW() - INTERVAL '30 days'
+        GROUP BY client_version
+        ORDER BY usage_count DESC, successful_attacks DESC
+        LIMIT 10
+      `;
+
+      const result = await db.query(query);
+      
+      if (result.rows.length === 0) {
+        logger.warn('No client versions found in DB, using fallback banners');
+        this.bannerCache = this.fallbackBanners;
+        this.lastBannerUpdate = now;
+        return this.fallbackBanners;
+      }
+
+      // Generate banners based on attacker client patterns
+      const dynamicBanners = this.generateBannersFromClients(result.rows);
+      
+      logger.info('Dynamic banners updated', { 
+        count: dynamicBanners.length,
+        topClient: result.rows[0].client_version,
+        usageCount: result.rows[0].usage_count
+      });
+
+      this.bannerCache = dynamicBanners;
+      this.lastBannerUpdate = now;
+      
+      return dynamicBanners;
+    } catch (error) {
+      logger.error('Failed to get dynamic banners:', error);
+      return this.fallbackBanners;
+    }
+  }
+
+  /**
+   * Generate SSH banners that match attacker expectations
+   * Based on their SSH client versions and targeting patterns
+   */
+  generateBannersFromClients(clientStats) {
+    const banners = [];
+    
+    for (const stat of clientStats) {
+      const client = stat.client_version.toLowerCase();
+      
+      // Analyze client version to determine what OS/version they expect
+      if (client.includes('ubuntu')) {
+        banners.push('SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5');
+        banners.push('SSH-2.0-OpenSSH_7.6p1 Ubuntu-4ubuntu0.7');
+      } else if (client.includes('debian')) {
+        banners.push('SSH-2.0-OpenSSH_7.9p1 Debian-10+deb10u2');
+        banners.push('SSH-2.0-OpenSSH_8.4p1 Debian-11+deb11u1');
+      } else if (client.includes('putty')) {
+        // PuTTY users often target Windows SSH servers
+        banners.push('SSH-2.0-OpenSSH_for_Windows_8.1');
+        banners.push('SSH-2.0-OpenSSH_7.7p1 Win32');
+      } else if (client.includes('openssh')) {
+        // Extract version if possible
+        const versionMatch = client.match(/openssh[_\s]*([\d.]+)/i);
+        if (versionMatch) {
+          const version = versionMatch[1];
+          banners.push(`SSH-2.0-OpenSSH_${version}p1 Ubuntu-4ubuntu0.1`);
+        }
+      } else if (client.includes('libssh')) {
+        // Often automated tools, target older vulnerable versions
+        banners.push('SSH-2.0-OpenSSH_7.4p1 Debian-10+deb9u7');
+        banners.push('SSH-2.0-OpenSSH_6.7p1 Debian-5+deb8u8');
+      }
+      
+      // Add Red Hat/CentOS for enterprise attackers
+      if (stat.successful_attacks > 0) {
+        banners.push('SSH-2.0-OpenSSH_7.4 Red Hat Enterprise Linux');
+        banners.push('SSH-2.0-OpenSSH_8.0p1 CentOS Linux');
+      }
+    }
+
+    // Remove duplicates and limit to 10
+    const uniqueBanners = [...new Set(banners)];
+    
+    // If we generated less than 5, add fallbacks
+    if (uniqueBanners.length < 5) {
+      uniqueBanners.push(...this.fallbackBanners.slice(0, 5 - uniqueBanners.length));
+    }
+
+    return uniqueBanners.slice(0, 10);
+  }
+
   async changeBanner() {
     try {
       if (!this.configPath) {
@@ -87,11 +201,14 @@ class AdaptationService {
       const bannerMatch = configContent.match(/ssh_version_string\s*=\s*(.+)/);
       const oldBanner = bannerMatch ? bannerMatch[1].trim() : 'Unknown';
 
-      // Select a different random banner
+      // Get dynamic banners based on attacker behavior
+      const availableBanners = await this.getDynamicBanners();
+
+      // Select a different banner (prefer ones attackers are targeting)
       let newBanner;
       do {
-        newBanner = this.bannerTemplates[Math.floor(Math.random() * this.bannerTemplates.length)];
-      } while (newBanner === oldBanner && this.bannerTemplates.length > 1);
+        newBanner = availableBanners[Math.floor(Math.random() * availableBanners.length)];
+      } while (newBanner === oldBanner && availableBanners.length > 1);
 
       // Replace banner in config
       const newConfig = configContent.replace(
@@ -101,14 +218,20 @@ class AdaptationService {
 
       await fs.writeFile(this.configPath, newConfig, 'utf8');
 
-      logger.info('Banner changed', { from: oldBanner, to: newBanner });
+      logger.info('Banner changed (DYNAMIC)', { 
+        from: oldBanner, 
+        to: newBanner,
+        source: 'attacker_behavior_analysis'
+      });
 
       return {
         type: 'BANNER_CHANGE',
         success: true,
         details: {
           old_banner: oldBanner,
-          new_banner: newBanner
+          new_banner: newBanner,
+          dynamic: true,
+          available_banners: availableBanners.length
         }
       };
     } catch (error) {

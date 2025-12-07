@@ -68,16 +68,24 @@ router.get('/', async (req, res) => {
 
     const query = `
       SELECT 
-        id, event_type, timestamp, source_ip, username,
+        id, event_type, 
+        to_char(timestamp, 'YYYY-MM-DD"T"HH24:MI:SS.MS') as timestamp,
+        source_ip, username,
         command, severity, anomaly_score, message,
-        cowrie_session_id, sensor
+        cowrie_session_id, sensor, service, protocol
       FROM events
       ${whereClause}
-      ORDER BY timestamp DESC
+      ORDER BY created_at DESC
       LIMIT $${limitParam} OFFSET $${offsetParam}
     `;
 
     const result = await db.query(query, [...values, limit, offset]);
+
+    // DEBUG: Log what timestamps are being returned from database
+    if (result.rows.length > 0) {
+      console.log('[API DEBUG] First event timestamp from DB:', result.rows[0].timestamp);
+      console.log('[API DEBUG] First event timestamp type:', typeof result.rows[0].timestamp);
+    }
 
     res.json({
       events: result.rows,

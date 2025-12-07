@@ -59,8 +59,8 @@ class EventProcessor {
       INSERT INTO events (
         id, event_type, timestamp, source_ip, cowrie_session_id,
         username, password, command, input_data, message,
-        sensor, protocol, raw_event, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        sensor, protocol, service, raw_event, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING id
     `;
 
@@ -78,6 +78,7 @@ class EventProcessor {
       event.message,
       event.sensor,
       event.protocol,
+      event.service || 'SSH', // This is critical - must include service field!
       JSON.stringify(event.raw_event),
       new Date()
     ];

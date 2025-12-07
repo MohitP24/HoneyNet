@@ -11,9 +11,10 @@ class Database {
     try {
       this.pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        max: 20,
+        max: 30,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        connectionTimeoutMillis: 10000,
+        query_timeout: 30000,
       });
 
       // Test connection

@@ -6,8 +6,11 @@ import EventsTable from './EventsTable';
 import SeverityChart from './SeverityChart';
 import AttackersTable from './AttackersTable';
 import AdaptationsLog from './AdaptationsLog';
+import ServiceStatusGrid from './ServiceStatusGrid';
 
 const Dashboard = () => {
+    const [selectedAttacker, setSelectedAttacker] = React.useState(null);
+
     // Fetch stats data with auto-refresh every 5 seconds
     const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ['stats'],
@@ -18,8 +21,12 @@ const Dashboard = () => {
 
     // Fetch recent events
     const { data: events, isLoading: eventsLoading } = useQuery({
-        queryKey: ['events'],
-        queryFn: () => api.getEvents({ limit: 20, page: 1 }),
+        queryKey: ['events', selectedAttacker],
+        queryFn: () => api.getEvents({ 
+            limit: 20, 
+            page: 1,
+            ...(selectedAttacker && { source_ip: selectedAttacker })
+        }),
         refetchInterval: 5000,
         retry: 2,
     });
@@ -60,6 +67,11 @@ const Dashboard = () => {
                 </div>
             </header>
 
+            {/* Service Status Grid */}
+            <div className="mb-8">
+                <ServiceStatusGrid />
+            </div>
+
             {/* Stats Cards */}
             <div className="mb-8">
                 <StatsCards stats={stats} loading={statsLoading} />
@@ -77,6 +89,7 @@ const Dashboard = () => {
                     <AttackersTable
                         attackers={attackers?.attackers || []}
                         loading={attackersLoading}
+                        onAttackerClick={(ip) => setSelectedAttacker(ip === selectedAttacker ? null : ip)}
                     />
                 </div>
             </div>
@@ -85,6 +98,19 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Events */}
                 <div>
+                    {selectedAttacker && (
+                        <div className="mb-3 flex items-center justify-between glass rounded-lg px-4 py-2">
+                            <span className="text-sm text-slate-300">
+                                Filtering events from: <span className="font-mono text-blue-400">{selectedAttacker}</span>
+                            </span>
+                            <button
+                                onClick={() => setSelectedAttacker(null)}
+                                className="text-xs px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                            >
+                                Clear Filter
+                            </button>
+                        </div>
+                    )}
                     <EventsTable
                         events={events?.events || []}
                         loading={eventsLoading}

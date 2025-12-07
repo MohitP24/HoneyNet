@@ -1,6 +1,19 @@
 # app.py — Final Ensemble with weighted majority, suspicious token override
 
+# Suppress TensorFlow info and warning messages
 import os
+
+# Change to script directory to find model files
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 0=all, 1=info, 2=warning, 3=error
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN messages
+
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+
 import time
 import json
 import logging
@@ -184,3 +197,11 @@ def predict(req: PredictRequest):
             "reason": "suspicious token override" if matched_tokens else "model ensemble decision"
         }
     }
+
+# --------------------------
+# Run the FastAPI server
+# --------------------------
+if __name__ == "__main__":
+    import uvicorn
+    logger.info("Starting ML Service on port 8001...")
+    uvicorn.run(app, host="0.0.0.0", port=8001)

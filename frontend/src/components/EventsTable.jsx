@@ -64,6 +64,19 @@ const EventsTable = ({ events, loading }) => {
                                 <div className="flex items-center gap-2">
                                     <span className="text-slate-500">IP:</span>
                                     <span className="text-slate-300 font-mono">{event.source_ip}</span>
+                                    {event.anomaly_score && (
+                                        <>
+                                            <span className="text-slate-600">•</span>
+                                            <span className="text-slate-500">ML Score:</span>
+                                            <span className={`font-mono font-semibold ${
+                                                event.anomaly_score >= 0.7 ? 'text-red-400' : 
+                                                event.anomaly_score >= 0.5 ? 'text-yellow-400' : 
+                                                'text-green-400'
+                                            }`}>
+                                                {parseFloat(event.anomaly_score).toFixed(3)}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
                                 {event.message && (
                                     <div className="flex items-start gap-2">
