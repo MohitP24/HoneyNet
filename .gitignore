@@ -17,6 +17,10 @@ node_modules/
 logs/
 *.log
 
+# Training dumps
+*.csv
+merged_full_dataset*.csv
+
 # OS
 .DS_Store
 Thumbs.db

