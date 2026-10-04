@@ -4,6 +4,193 @@ AI-driven adaptive honeynet: decoy SSH/HTTP/FTP services feed events into a Node
 
 Application code under `src/`, `frontend/`, `ml-service/`, and `honeypots/` is unchanged. This cleanup only removed leftover docs, duplicate start scripts, and the unused `ai_honeynet_inference` copy of the ML service.
 
+---
+
+## System Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                              ATTACKER / INTERNET                                 │
+└───────────────────────┬──────────────────────────────────────────────────────────┘
+                        │  inbound connections
+        ┌───────────────▼───────────────────────────────────────┐
+        │                  HONEYPOT LAYER                        │
+        │  ┌───────────────┐  ┌────────────────┐  ┌──────────┐  │
+        │  │ Cowrie (SSH)  │  │ HTTP Honeypot  │  │   FTP    │  │
+        │  │  port 2222    │  │   port 8080    │  │  port    │  │
+        │  │  (WSL/Docker) │  │ (Python/Docker)│  │  2121    │  │
+        │  └───────┬───────┘  └───────┬────────┘  └────┬─────┘  │
+        └──────────│─────────────────│────────────────│─────────┘
+                   │ cowrie.json      │ http.json       │ ftp.json
+                   └──────────────────┴────────────────┘
+                                      │
+                                      ▼
+        ┌─────────────────────────────────────────────────────┐
+        │               NODE.JS BACKEND  (port 3000)           │
+        │                                                      │
+        │  ┌──────────────┐   ┌──────────────────────────┐   │
+        │  │  Log Watcher  │──►│     Event Normalizer      │   │
+        │  │  (tail JSON)  │   │  (srcIp, event, payload)  │   │
+        │  └──────────────┘   └────────────┬─────────────┘   │
+        │                                  │                   │
+        │                    ┌─────────────▼─────────────┐    │
+        │                    │      Event Processor        │    │
+        │                    │  ┌──────────────────────┐  │    │
+        │                    │  │  Campaign Detector    │  │    │
+        │                    │  │  Command Analyzer     │  │    │
+        │                    │  │  GeoIP Enrichment     │  │    │
+        │                    │  │  Reputation Check     │  │    │
+        │                    │  │  Malware Analysis     │  │    │
+        │                    │  └──────────┬───────────┘  │    │
+        │                    └────────────│──────────────┘    │
+        │                                 │                    │
+        │              ┌──────────────────┼────────────────┐  │
+        │              │                  │                 │  │
+        │              ▼                  ▼                 ▼  │
+        │  ┌──────────────────┐  ┌──────────────┐  ┌─────────┐│
+        │  │   ML Client       │  │  PostgreSQL   │  │ Alert   ││
+        │  │  HTTP → :8001     │  │  (pg pool)    │  │ Service ││
+        │  └────────┬─────────┘  └──────────────┘  └─────────┘│
+        │           │            ┌──────────────────────────┐  │
+        │           │            │  Adaptation Service       │  │
+        │           └──────────► │  (Cowrie config rewrite + │  │
+        │                        │   honeypot response       │  │
+        │                        │   tuning on high threat)  │  │
+        │                        └──────────────────────────┘  │
+        │                                                      │
+        │  REST API Routes: /events /attackers /analytics      │
+        │                   /adaptations /malware /export      │
+        └─────────────────────────────┬────────────────────────┘
+                                      │ JSON REST
+                                      ▼
+        ┌─────────────────────────────────────────────────────┐
+        │             ML SERVICE — FastAPI (port 8001)          │
+        │                                                      │
+        │  POST /predict                                       │
+        │  ┌──────────────────────────────────────────────┐   │
+        │  │  Feature Extraction (payload_len, TF-IDF, …) │   │
+        │  │       ┌─────────────────┐                    │   │
+        │  │       │ Isolation Forest│  score_IF (85 %)   │   │
+        │  │       └────────┬────────┘                    │   │
+        │  │                │                              │   │
+        │  │       ┌────────▼────────┐                    │   │
+        │  │       │  Autoencoder    │  score_AE (15 %)   │   │
+        │  │       └────────┬────────┘                    │   │
+        │  │                │                              │   │
+        │  │       ┌────────▼──────────────────────┐      │   │
+        │  │       │  Weighted Ensemble Fusion +    │      │   │
+        │  │       │  Suspicious-Token Override     │      │   │
+        │  │       └────────┬──────────────────────┘      │   │
+        │  └────────────────│──────────────────────────────┘   │
+        │   { score, label, explanation }                      │
+        └─────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+        ┌─────────────────────────────────────────────────────┐
+        │          REACT DASHBOARD — Vite (port 5173 / 3001)   │
+        │                                                      │
+        │  ┌────────────┐  ┌────────────────┐  ┌──────────┐  │
+        │  │  Stats     │  │ Events Table   │  │ Severity │  │
+        │  │  Cards     │  │ (live feed)    │  │ Chart    │  │
+        │  └────────────┘  └────────────────┘  └──────────┘  │
+        │  ┌────────────┐  ┌────────────────┐  ┌──────────┐  │
+        │  │ Attackers  │  │ Adaptations    │  │ Service  │  │
+        │  │ Table      │  │ Log            │  │ Status   │  │
+        │  └────────────┘  └────────────────┘  └──────────┘  │
+        └─────────────────────────────────────────────────────┘
+```
+
+### Architecture Overview (Mermaid)
+
+```mermaid
+flowchart TD
+    ATTACKER(["🕵️ Attacker / Scanner"])
+
+    subgraph HONEYPOTS["Honeypot Layer"]
+        SSH["Cowrie SSH\n:2222 (WSL/Docker)"]
+        HTTP["HTTP Decoy\n:8080 (Python/Docker)"]
+        FTP["FTP Decoy\n:2121 (Python/Docker)"]
+    end
+
+    subgraph BACKEND["Node.js Backend :3000"]
+        LW["Log Watcher\n(tail JSON logs)"]
+        EN["Event Normalizer"]
+        EP["Event Processor"]
+        subgraph ENRICHMENT["Enrichment Pipeline"]
+            CD["Campaign Detector"]
+            CA["Command Analyzer"]
+            GEO["GeoIP Service"]
+            REP["Reputation Check\n(AbuseIPDB)"]
+            MAL["Malware Analysis\n(VirusTotal + static)"]
+        end
+        MLC["ML Client"]
+        AS["Adaptation Service"]
+        ALS["Alert Service\n(Slack / Discord)"]
+        DB[("PostgreSQL\n:5432")]
+        API["REST API\n/events /attackers\n/analytics /export"]
+    end
+
+    subgraph MLSVC["ML Service — FastAPI :8001"]
+        FE["Feature Extraction\nTF-IDF + numeric"]
+        IF["Isolation Forest\n(85% weight)"]
+        AE["Autoencoder\n(15% weight)"]
+        ENS["Weighted Ensemble\n+ Token Override"]
+    end
+
+    DASH["⚛️ React Dashboard\nVite :5173 / nginx :3001"]
+
+    ATTACKER -->|SSH / HTTP / FTP| SSH
+    ATTACKER -->|SSH / HTTP / FTP| HTTP
+    ATTACKER -->|SSH / HTTP / FTP| FTP
+
+    SSH -->|cowrie.json| LW
+    HTTP -->|http_honeypot.json| LW
+    FTP -->|ftp_honeypot.json| LW
+
+    LW --> EN --> EP
+    EP --> CD & CA & GEO & REP & MAL
+    EP --> MLC
+    EP --> DB
+    EP --> ALS
+
+    MLC -->|POST /predict| FE
+    FE --> IF & AE
+    IF & AE --> ENS
+    ENS -->|score + label| MLC
+
+    MLC --> AS
+    AS -->|rewrite config| SSH
+
+    API --- DB
+    DASH -->|fetch JSON| API
+```
+
+### Component Descriptions
+
+| Component | Tech | Role |
+|---|---|---|
+| **Cowrie SSH Honeypot** | Python / Docker | Emulates OpenSSH, captures credentials & commands, writes `cowrie.json` |
+| **HTTP Honeypot** | Python (custom) | Fake web server logging all requests; runs in WSL or Docker |
+| **FTP Honeypot** | Python (custom) | Fake FTP service capturing login attempts and commands |
+| **Log Watcher** | Node.js `fs.watch` | Tail-follows all honeypot JSON log files and forwards raw events |
+| **Event Normalizer** | Node.js | Unifies event schema across SSH / HTTP / FTP sources |
+| **Event Processor** | Node.js | Orchestrates the full enrichment + classification pipeline |
+| **Campaign Detector** | Node.js | Groups related events from the same attacker into attack campaigns |
+| **Command Analyzer** | Node.js | Classifies attacker shell commands (recon, exfiltration, persistence …) |
+| **GeoIP Service** | Node.js + MaxMind | Resolves attacker IP → country, ASN |
+| **Reputation Service** | Node.js + AbuseIPDB | Checks attacker IPs against abuse databases (optional, free tier) |
+| **Malware Analysis** | Node.js + VirusTotal | Static + optional VT cloud scanning of captured payloads |
+| **ML Client** | Node.js HTTP | Sends events to FastAPI service, receives threat score |
+| **ML Service** | FastAPI + scikit-learn + Keras | Runs Isolation Forest + Autoencoder ensemble; returns `{score, label}` |
+| **Isolation Forest** | scikit-learn | Unsupervised anomaly detection on numeric + TF-IDF features |
+| **Autoencoder** | TensorFlow / Keras | Reconstruction-error anomaly scoring for high-dimensional payloads |
+| **Adaptation Service** | Node.js | On high-severity events, rewrites Cowrie config (banners, honeytokens) and restarts the decoy |
+| **Alert Service** | Node.js | Fires Slack / Discord webhook on critical threat classifications |
+| **PostgreSQL** | PostgreSQL 15 | Stores events, attackers, campaigns, adaptations, threat intel |
+| **REST API** | Express.js | Exposes `/events`, `/attackers`, `/analytics`, `/malware`, `/export` |
+| **React Dashboard** | Vite + React | Live threat feed, severity charts, attacker table, adaptation log |
+| **Threat Export** | Node.js | Exports collected intel as STIX 2.1 / MISP JSON bundles |
+
 ## Layout
 
 ```
