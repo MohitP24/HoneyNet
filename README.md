@@ -14,81 +14,81 @@ Application code under `src/`, `frontend/`, `ml-service/`, and `honeypots/` is u
 └───────────────────────┬──────────────────────────────────────────────────────────┘
                         │  inbound connections
         ┌───────────────▼───────────────────────────────────────┐
-        │                  HONEYPOT LAYER                        │
+        │                  HONEYPOT LAYER                       │
         │  ┌───────────────┐  ┌────────────────┐  ┌──────────┐  │
         │  │ Cowrie (SSH)  │  │ HTTP Honeypot  │  │   FTP    │  │
         │  │  port 2222    │  │   port 8080    │  │  port    │  │
         │  │  (WSL/Docker) │  │ (Python/Docker)│  │  2121    │  │
         │  └───────┬───────┘  └───────┬────────┘  └────┬─────┘  │
         └──────────│─────────────────│────────────────│─────────┘
-                   │ cowrie.json      │ http.json       │ ftp.json
+                   │ cowrie.json      │ http.json      │ ftp.json
                    └──────────────────┴────────────────┘
                                       │
                                       ▼
         ┌─────────────────────────────────────────────────────┐
-        │               NODE.JS BACKEND  (port 3000)           │
-        │                                                      │
-        │  ┌──────────────┐   ┌──────────────────────────┐   │
-        │  │  Log Watcher  │──►│     Event Normalizer      │   │
-        │  │  (tail JSON)  │   │  (srcIp, event, payload)  │   │
-        │  └──────────────┘   └────────────┬─────────────┘   │
-        │                                  │                   │
+        │               NODE.JS BACKEND  (port 3000)          │
+        │                                                     │
+        │  ┌──────────────┐   ┌──────────────────────────┐    │
+        │  │  Log Watcher  │──►│     Event Normalizer    │    │
+        │  │  (tail JSON)  │   │  (srcIp, event, payload)│    │
+        │  └──────────────┘   └────────────┬─────────────┘    │
+        │                                  │                  │
         │                    ┌─────────────▼─────────────┐    │
-        │                    │      Event Processor        │    │
-        │                    │  ┌──────────────────────┐  │    │
-        │                    │  │  Campaign Detector    │  │    │
-        │                    │  │  Command Analyzer     │  │    │
-        │                    │  │  GeoIP Enrichment     │  │    │
-        │                    │  │  Reputation Check     │  │    │
-        │                    │  │  Malware Analysis     │  │    │
-        │                    │  └──────────┬───────────┘  │    │
+        │                    │      Event Processor      │    │
+        │                    │  ┌──────────────────────┐ │    │
+        │                    │  │  Campaign Detector   │ │    │
+        │                    │  │  Command Analyzer    │ │    │
+        │                    │  │  GeoIP Enrichment    │ │    │
+        │                    │  │  Reputation Check    │ │    │
+        │                    │  │  Malware Analysis    │ │    │
+        │                    │  └──────────┬──────────┘  │    │
         │                    └────────────│──────────────┘    │
-        │                                 │                    │
+        │                                 │                   │
         │              ┌──────────────────┼────────────────┐  │
-        │              │                  │                 │  │
-        │              ▼                  ▼                 ▼  │
+        │              │                  │                │  │
+        │              ▼                  ▼                ▼  │
         │  ┌──────────────────┐  ┌──────────────┐  ┌─────────┐│
-        │  │   ML Client       │  │  PostgreSQL   │  │ Alert   ││
-        │  │  HTTP → :8001     │  │  (pg pool)    │  │ Service ││
+        │  │   ML Client       │  │  PostgreSQL   │  │ Alert ││
+        │  │  HTTP → :8001     │  │  (pg pool)    │  │Service││
         │  └────────┬─────────┘  └──────────────┘  └─────────┘│
-        │           │            ┌──────────────────────────┐  │
-        │           │            │  Adaptation Service       │  │
-        │           └──────────► │  (Cowrie config rewrite + │  │
-        │                        │   honeypot response       │  │
-        │                        │   tuning on high threat)  │  │
-        │                        └──────────────────────────┘  │
-        │                                                      │
-        │  REST API Routes: /events /attackers /analytics      │
-        │                   /adaptations /malware /export      │
-        └─────────────────────────────┬────────────────────────┘
+        │           │            ┌─────────────────────────┐  │
+        │           │            │  Adaptation Service     │  │
+        │           └──────────► │(Cowrie config rewrite + │  │
+        │                        │ honeypot response       │  │
+        │                        │ tuning on high threat)  │  │
+        │                        └─────────────────────────┘  │
+        │                                                     │
+        │  REST API Routes: /events /attackers /analytics     │
+        │                   /adaptations /malware /export     │
+        └─────────────────────────────┬───────────────────────┘
                                       │ JSON REST
                                       ▼
         ┌─────────────────────────────────────────────────────┐
-        │             ML SERVICE — FastAPI (port 8001)          │
-        │                                                      │
-        │  POST /predict                                       │
+        │             ML SERVICE — FastAPI (port 8001)        │
+        │                                                     │
+        │  POST /predict                                      │
         │  ┌──────────────────────────────────────────────┐   │
         │  │  Feature Extraction (payload_len, TF-IDF, …) │   │
         │  │       ┌─────────────────┐                    │   │
         │  │       │ Isolation Forest│  score_IF (85 %)   │   │
         │  │       └────────┬────────┘                    │   │
-        │  │                │                              │   │
+        │  │                │                             │   │
         │  │       ┌────────▼────────┐                    │   │
         │  │       │  Autoencoder    │  score_AE (15 %)   │   │
         │  │       └────────┬────────┘                    │   │
-        │  │                │                              │   │
+        │  │                │                             │   │
         │  │       ┌────────▼──────────────────────┐      │   │
-        │  │       │  Weighted Ensemble Fusion +    │      │   │
-        │  │       │  Suspicious-Token Override     │      │   │
+        │  │       │  Weighted Ensemble Fusion +    │     │   │
+        │  │       │  Suspicious-Token Override     │     │   │
         │  │       └────────┬──────────────────────┘      │   │
-        │  └────────────────│──────────────────────────────┘   │
-        │   { score, label, explanation }                      │
+        │  └────────────────│─────────────────────── ─────┘   │
+        │   { score, label, explanation }                     │
         └─────────────────────────────────────────────────────┘
                                       │
                                       ▼
-        ┌─────────────────────────────────────────────────────┐
-        │          REACT DASHBOARD — Vite (port 5173 / 3001)   │
-        │                                                      │
+        ┌────────────────────────────────────────────────────┐
+        │        REACT DASHBOARD — Vite (port 5173 / 3001)   │
+        │                                                    │
         │  ┌────────────┐  ┌────────────────┐  ┌──────────┐  │
         │  │  Stats     │  │ Events Table   │  │ Severity │  │
         │  │  Cards     │  │ (live feed)    │  │ Chart    │  │
@@ -97,7 +97,7 @@ Application code under `src/`, `frontend/`, `ml-service/`, and `honeypots/` is u
         │  │ Attackers  │  │ Adaptations    │  │ Service  │  │
         │  │ Table      │  │ Log            │  │ Status   │  │
         │  └────────────┘  └────────────────┘  └──────────┘  │
-        └─────────────────────────────────────────────────────┘
+        └────────────────────────────────────────────────────┘
 ```
 
 ### Architecture Overview (Mermaid)
