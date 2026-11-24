@@ -1,6 +1,9 @@
 # Python
 venv/
+.venv*/
+**/venv/
 ml-service/venv/
+ml-service/.venv*/
 **/__pycache__/
 *.pyc
 *.pyo
@@ -10,41 +13,82 @@ ml-service/venv/
 node_modules/
 **/node_modules/
 
-# Environment
+# Environment & Secrets (recursive so nested .env files never leak)
 .env
 .env.*
+**/.env
+**/.env.*
 !.env.example
+!**/.env.example
+*.secret
+secrets/
+.secrets/
+credentials.json
+service-account*.json
 
-# Logs
+# Private Keys & TLS/SSL Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.ppk
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+ssl/
+certs/
+
+# Database Dumps & Persistent Volumes
+*.sql.gz
+*.dump
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+pgdata/
+postgres-data/
+
+# Logs & Test Coverage
 logs/
 *.log
+coverage/
+.nyc_output/
 
-# Training dumps
+# Training dumps & Packet Captures
 *.csv
 merged_full_dataset*.csv
+*.pcap
+*.cap
 
-# OS
+# OS & IDEs
 .DS_Store
 Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Build output
 frontend/dist/
 frontend/.vite/
 
-# ML model caches (large binary files — keep .pkl and .keras in repo)
-ml-service/__pycache__/
-
-# Mock data runtime files (auto-created on start, not source)
+# Mock data runtime files & captured malware artifacts (auto-created on start)
 mock-data/honeyfs/
 mock-data/downloads/
 mock-data/ftp_files/
 mock-data/telnet_honeypot.json
 mock-data/mysql_honeypot.json
+downloads/
+quarantine/
+malware_samples/
 
 # Scratch / temp
 brain/
 *.tmp
-
-# Editor & runtime logs
-.vscode/
 cowrie-logs/
