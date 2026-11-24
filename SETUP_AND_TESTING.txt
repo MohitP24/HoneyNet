@@ -1,0 +1,538 @@
+================================================================================
+   AI-DRIVEN ADAPTIVE HONEYNET — COMPLETE SETUP & LIVE TESTING GUIDE
+================================================================================
+   Project: HoneyNet-main
+   Stack  : Node.js (Express) · Python (FastAPI + Flask) · PostgreSQL (Docker)
+            React/Vite Dashboard · SSH/HTTP/FTP/Telnet/MySQL Honeypots + ML/AI
+================================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 0 — PREREQUISITES (Install these before anything else)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Node.js v18 or later
+     Download: https://nodejs.org/en/download
+     Verify  : node --version   (should print v18.x.x or higher)
+               npm  --version
+
+  2. Python 3.11
+     Download: https://www.python.org/downloads/
+     Verify  : python --version (should print 3.11.x)
+
+  3. Docker Desktop (for PostgreSQL)
+     Download: https://www.docker.com/products/docker-desktop/
+     Verify  : docker --version
+     NOTE    : Make sure Docker Desktop is RUNNING before Step 1 below.
+
+  4. Git (optional, to clone the project)
+     Download: https://git-scm.com/downloads
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 1 — ONE-TIME SETUP (Do this only the very first time)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Open PowerShell and navigate to the project folder:
+  cd "C:\Users\Mohit Patil\Documents\Projects\HoneyNet-main"
+
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 1-A  Start the PostgreSQL Database Container
+────────────────────────────────────────────────────────────────────────────────
+
+  docker run -d ^
+    --name honeynet-database ^
+    -e POSTGRES_USER=honeynet ^
+    -e POSTGRES_PASSWORD=honeynet123 ^
+    -e POSTGRES_DB=honeynet ^
+    -p 5434:5432 ^
+    --restart unless-stopped ^
+    postgres:15
+
+  Wait 5 seconds, then verify it is running:
+    docker ps
+
+  You should see "honeynet-database" with STATUS "Up".
+
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 1-B  Install Node.js Backend Dependencies
+────────────────────────────────────────────────────────────────────────────────
+
+  (from the project root)
+  npm install
+
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 1-C  Run Database Migrations (create all tables)
+────────────────────────────────────────────────────────────────────────────────
+
+  node src/database/migrate.js
+
+  Expected output:
+    Migration 1 (schema.sql) executed successfully
+    Migration 2 (migration_honeynet.sql) executed successfully
+    Migration 3 (migration_enhanced_features.sql) executed successfully
+    All migrations completed successfully
+
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 1-D  Set Up the Python ML Service Virtual Environment
+────────────────────────────────────────────────────────────────────────────────
+
+  cd ml-service
+  python -m venv venv
+  .\venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  pip install flask pyftpdlib
+  cd ..
+
+
+────────────────────────────────────────────────────────────────────────────────
+ STEP 1-E  Install Frontend Dependencies
+────────────────────────────────────────────────────────────────────────────────
+
+  cd frontend
+  npm install
+  cd ..
+
+
+  ✅ One-time setup is complete! You will NOT need to repeat these steps.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 2 — RUNNING THE PROJECT (Every time you want to start the system)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Open FOUR separate PowerShell windows. Run one command per window.
+  Do NOT close any window while testing — each one keeps a service alive.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TERMINAL 0  Ensure Docker is running (run this first, every time)
+────────────────────────────────────────────────────────────────────────────────
+
+  docker start honeynet-database
+
+  Verify: docker ps
+  You should see "honeynet-database" with STATUS "Up".
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TERMINAL 1  Python ML / AI Classification Service (port 8001)
+────────────────────────────────────────────────────────────────────────────────
+
+  cd "C:\Users\Mohit Patil\Documents\Projects\HoneyNet-main\ml-service"
+  .\venv\Scripts\Activate.ps1
+  python -m uvicorn app:app --host 0.0.0.0 --port 8001
+
+  Expected output:
+    ✅ Loaded Isolation Forest model from model/isolation_forest_model.pkl
+    ✅ Loaded Autoencoder model + scalers
+    INFO:     Application startup complete.
+    INFO:     Uvicorn running on http://0.0.0.0:8001
+
+  Swagger (ML API):  http://localhost:8001/docs
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TERMINAL 2  Node.js Backend API + Real-Time Watchers (port 3000)
+────────────────────────────────────────────────────────────────────────────────
+
+  cd "C:\Users\Mohit Patil\Documents\Projects\HoneyNet-main"
+  npm start
+
+  Expected output (key lines):
+    PostgreSQL connected successfully
+    Log watcher started successfully
+    Multi-honeypot watcher active (4/4 services)
+    Server running on port 3000
+
+  REST API:    http://localhost:3000/api
+  Swagger UI:  http://localhost:3000/api-docs   <— interactive API explorer
+  Health:      http://localhost:3000/health
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TERMINAL 3  React / Vite Frontend Dashboard (port 5173)
+────────────────────────────────────────────────────────────────────────────────
+
+  cd "C:\Users\Mohit Patil\Documents\Projects\HoneyNet-main\frontend"
+  npm run dev
+
+  Expected output:
+    VITE v6.x.x  ready in ... ms
+    ➜  Local:   http://localhost:5173/
+    ➜  Network: http://192.168.1.40:5173/   <— use this on phone/second laptop
+
+  Open in browser:  http://localhost:5173
+  Open on phone  :  http://192.168.1.40:5173   (must be on same Wi-Fi)
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TERMINAL 4+  Honeypot Servers (run whichever protocols you want to test)
+────────────────────────────────────────────────────────────────────────────────
+
+  Each honeypot is a standalone Python script. Run each in its own terminal.
+  All use the ML service venv so no extra install is needed.
+
+  Navigate to project root first:
+    cd "C:\Users\Mohit Patil\Documents\Projects\HoneyNet-main"
+
+  -- HTTP Honeypot (port 8080) --
+    .\ml-service\venv\Scripts\python.exe honeypots/http_honeypot.py
+
+  -- FTP Honeypot (port 2121) --
+    .\ml-service\venv\Scripts\python.exe honeypots/ftp_honeypot.py
+
+  -- Telnet Honeypot (port 2323) --
+    .\ml-service\venv\Scripts\python.exe honeypots/telnet_honeypot.py
+
+  -- MySQL Honeypot (port 3306) --
+    .\ml-service\venv\Scripts\python.exe honeypots/mysql_honeypot.py
+
+  NOTE: If a honeypot fails because a port is already in use, find and stop
+        the process using that port:
+          netstat -ano | findstr :<PORT>
+          taskkill /PID <PID> /F
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 3 — PORT & URL REFERENCE MAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Service                       Port   URL / Command
+  ─────────────────────────────────────────────────────────────────────────────
+  Frontend Dashboard            5173   http://localhost:5173
+                                       http://192.168.1.40:5173     (LAN/Wi-Fi)
+  Node.js Backend API           3000   http://localhost:3000/api
+  Swagger UI (Backend)          3000   http://localhost:3000/api-docs
+                                       http://192.168.1.40:3000/api-docs
+  Swagger UI (ML Service)       8001   http://localhost:8001/docs
+  ML AI Classification Service  8001   http://localhost:8001
+  HTTP Decoy Honeypot           8080   http://192.168.1.40:8080
+  FTP Decoy Honeypot            2121   ftp 192.168.1.40 2121
+  Telnet Decoy Honeypot         2323   telnet 192.168.1.40 2323
+  MySQL Decoy Honeypot          3306   mysql -h 192.168.1.40 -P 3306 -u root -p
+  PostgreSQL (Docker)           5434   Internal only (not exposed to LAN)
+  ─────────────────────────────────────────────────────────────────────────────
+
+  YOUR HOST MACHINE Wi-Fi IP: 192.168.1.40
+  (Verify anytime by running:  ipconfig   and looking for "Wireless LAN Wi-Fi")
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 4 — WINDOWS FIREWALL (One-Time — Required for external device testing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Run PowerShell as ADMINISTRATOR and execute:
+
+  New-NetFirewallRule -DisplayName "HoneyNet MultiDevice" `
+    -Direction Inbound `
+    -LocalPort 3000,5173,8080,2121,2323,3306 `
+    -Protocol TCP `
+    -Action Allow
+
+  This allows your phone and second laptop to reach HoneyNet services over Wi-Fi.
+  You only need to do this once. To verify it worked:
+    Get-NetFirewallRule -DisplayName "HoneyNet MultiDevice"
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 5 — LIVE TESTING GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  BEFORE TESTING: Make sure all 4 terminals from Section 2 are running.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 1 — Verify the Dashboard Is Live
+────────────────────────────────────────────────────────────────────────────────
+
+  On your PC:
+    Open: http://localhost:5173
+    You should see the HoneyNet dashboard with:
+      • 5 service cards (Cowrie SSH, HTTP, FTP, Telnet, MySQL) with event counts
+      • Live event list showing SSH events from mock data
+      • Attack statistics, severity charts, top attackers
+
+  From your Phone or Second Laptop (on same Wi-Fi):
+    Open: http://192.168.1.40:5173
+    Dashboard should load identically.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 2 — Swagger UI: Inspect Live API Responses
+────────────────────────────────────────────────────────────────────────────────
+
+  On your PC:
+    Open: http://localhost:3000/api-docs
+
+  Steps:
+    1. Click "GET /api/services"
+    2. Click "Try it out" → "Execute"
+    3. See the live JSON response with all 5 honeypot services and event counts.
+
+    Try also:
+      GET /api/stats     → Total events, top attackers, severity distribution
+      GET /api/events    → Live event list (use severity=HIGH to filter)
+      GET /api/attackers → Attacker profiles with threat levels
+      GET /api/adaptations → SSH banner changes, honeyfile modifications
+
+  ML Service Swagger:
+    Open: http://localhost:8001/docs
+    Click "POST /classify" → "Try it out"
+    Paste any event JSON → "Execute" → See AI anomaly score + severity.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 3 — HTTP Honeypot: Web Attack Simulation
+────────────────────────────────────────────────────────────────────────────────
+
+  Requires Terminal 4 running http_honeypot.py on port 8080.
+
+  FROM YOUR PHONE (browser):
+    • http://192.168.1.40:8080/admin
+        → Fake admin login page appears
+    • http://192.168.1.40:8080/etc/passwd
+        → Path traversal attempt logged
+    • http://192.168.1.40:8080/login?user=admin'%20OR%201=1--
+        → SQL injection attempt logged
+
+  FROM PC / SECOND LAPTOP (command line):
+    curl http://192.168.1.40:8080/admin
+    curl -X POST http://192.168.1.40:8080/login -d "username=admin&password=hacked"
+    curl http://192.168.1.40:8080/wp-login.php
+
+  WHAT TO OBSERVE:
+    • Terminal 4 prints each request immediately.
+    • Terminal 2 prints "HTTP event detected" and "HTTP event stored successfully".
+    • Dashboard HTTP event count increments in real time.
+    • Your device's real IP appears in the Top Attackers list.
+    • AI classifies the request as HIGH/MEDIUM severity automatically.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 4 — FTP Honeypot: Credential Capture
+────────────────────────────────────────────────────────────────────────────────
+
+  Requires Terminal 4 running ftp_honeypot.py on port 2121.
+
+  FROM PC / SECOND LAPTOP:
+    Windows (Command Prompt):   ftp 192.168.1.40 2121
+    Linux/Mac:                  ftp -p 192.168.1.40 2121
+
+    At the prompts:
+      Name   : anonymous     (or try: admin, root, test, ftp)
+      Password: anything123
+
+    FTP commands to try after login:
+      dir         (list files)
+      get readme.txt
+      put test.txt
+      bye
+
+  WHAT TO OBSERVE:
+    • Every FTP command is logged to mock-data/ftp_honeypot.json
+    • Terminal 2 prints "FTP event detected" for each command
+    • Dashboard FTP event count increments in real time
+    • Credentials (username + password) are captured and stored
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 5 — Telnet Honeypot: Remote Login Simulation
+────────────────────────────────────────────────────────────────────────────────
+
+  Requires Terminal 4 running telnet_honeypot.py on port 2323.
+
+  FROM PC / SECOND LAPTOP:
+    Windows: telnet 192.168.1.40 2323
+             (If telnet is not installed: Enable-WindowsOptionalFeature
+              -Online -FeatureName TelnetClient)
+    Linux  : telnet 192.168.1.40 2323
+    OR use PuTTY → Connection type: Telnet → Host: 192.168.1.40 → Port: 2323
+
+    At the prompts:
+      login   : root   (or any username)
+      Password: toor   (or any password)
+
+  WHAT TO OBSERVE:
+    • Credentials are captured and logged to mock-data/telnet_honeypot.json
+    • Terminal 2 prints "Telnet event detected"
+    • Dashboard Telnet event count increments
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 6 — MySQL Honeypot: Database Attack Simulation
+────────────────────────────────────────────────────────────────────────────────
+
+  Requires Terminal 4 running mysql_honeypot.py on port 3306.
+
+  FROM PC / SECOND LAPTOP:
+    If MySQL client is installed:
+      mysql -h 192.168.1.40 -P 3306 -u root -p
+      (Enter any password when prompted)
+
+    OR using netcat to simulate a raw probe:
+      nc 192.168.1.40 3306
+      (The honeypot sends MySQL handshake bytes, then disconnects)
+
+  WHAT TO OBSERVE:
+    • The honeypot captures the username ("root") and client IP
+    • Returns MySQL Error 1045: Access denied (realistic deception)
+    • Event logged to mock-data/mysql_honeypot.json
+    • Dashboard MySQL event count increments
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TEST 7 — Multi-Device Dashboard Observation
+────────────────────────────────────────────────────────────────────────────────
+
+  For the best demonstration (e.g. showing the project to others):
+
+    DEVICE A (your PC):
+      Keep the dashboard open at: http://localhost:5173
+      Watch events, charts, and service counts update in real time.
+
+    DEVICE B (your phone on same Wi-Fi):
+      Open: http://192.168.1.40:8080/admin
+      Submit credentials in the fake login form.
+      Your phone's IP will appear in the dashboard's Top Attackers list.
+
+    DEVICE C (second laptop on same Wi-Fi):
+      Run FTP or Telnet attacks (Tests 4 or 5 above).
+      Attacks are classified by the AI and shown on the dashboard immediately.
+
+  You can open the dashboard on BOTH your phone and PC simultaneously —
+  all three devices will show live updates at the same time.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 6 — ENVIRONMENT VARIABLES REFERENCE (.env file)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File location: HoneyNet-main/.env
+  All values are loaded at runtime — no hardcoded values in source code.
+
+  Key variables:
+
+  PORT=3000                              Node.js API server port
+  NODE_ENV=development                   Environment mode
+  DB_HOST=127.0.0.1                      PostgreSQL host (Docker on localhost)
+  DB_PORT=5434                           PostgreSQL port (mapped from Docker)
+  DB_NAME=honeynet                       Database name
+  DB_USER=honeynet                       Database username
+  DB_PASSWORD=honeynet123                Database password
+  ML_SERVICE_URL=http://localhost:8001   ML service endpoint
+  COWRIE_LOG_PATH=...mock-data\cowrie.json  SSH log file (mock data for dev)
+  ENABLE_AUTO_ADAPTATION=true            Trigger AI adaptations on HIGH events
+  ADAPTATION_COOLDOWN=300                Seconds between adaptations
+  ENABLE_ALERTS=false                    Set true to enable Slack/Discord alerts
+  LOG_LEVEL=info                         Logging verbosity (debug|info|warn|error)
+
+  Optional API keys (all disabled by default, all free):
+  ABUSEIPDB_API_KEY=                     IP reputation (free: 1000/day)
+  VIRUSTOTAL_API_KEY=                    Malware scan (free: 500/day)
+  SLACK_WEBHOOK_URL=                     Alert notifications (free)
+  DISCORD_WEBHOOK_URL=                   Alert notifications (free)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 7 — TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  PROBLEM: "Port already in use" / EADDRINUSE / [Errno 10048]
+  FIX    : Find and stop what is using the port:
+             netstat -ano | findstr :3000
+             taskkill /PID <PID> /F
+           Or simply kill all Node.js processes:
+             taskkill /IM node.exe /F
+
+  PROBLEM: "Cannot connect to PostgreSQL" / EACCES / password auth failed
+  FIX    : Check Docker is running and container is up:
+             docker start honeynet-database
+             docker ps
+           Verify .env has DB_PORT=5434 (not 5432).
+
+  PROBLEM: Python virtual environment not found / ModuleNotFoundError
+  FIX    : Recreate the venv (from ml-service folder):
+             python -m venv venv
+             .\venv\Scripts\Activate.ps1
+             pip install -r requirements.txt
+             pip install flask pyftpdlib
+
+  PROBLEM: Phone/second laptop cannot open the dashboard
+  FIX    : 1. Confirm devices are on the same Wi-Fi network.
+           2. Run the firewall rule from Section 4 (as Administrator).
+           3. Confirm your Wi-Fi IP is still 192.168.1.40:
+                ipconfig
+              Look for "Wireless LAN Wi-Fi" → IPv4 Address.
+           4. If the IP changed, update the Vite proxy or use the new IP.
+
+  PROBLEM: "FTP: Connection refused" on port 2121
+  FIX    : Start the FTP honeypot in a new terminal (Section 2, Terminal 4).
+
+  PROBLEM: Dashboard shows 0 HTTP/FTP/Telnet/MySQL events
+  FIX    : The backend auto-ingests existing log entries on first startup.
+           Trigger new events by visiting http://192.168.1.40:8080 or running
+           the FTP/Telnet/MySQL tests in Section 5.
+
+  PROBLEM: ML service returns 503 / connection refused
+  FIX    : Restart Terminal 1 (the uvicorn ML service).
+           Events are still stored in the database; ML runs when it reconnects.
+
+  PROBLEM: "SCRAM authentication error" in Node.js
+  FIX    : Password mismatch in .env vs database.
+           Reset inside Docker:
+             docker exec -i honeynet-database psql -U postgres -c ^
+               "ALTER USER honeynet WITH PASSWORD 'honeynet123';"
+           Confirm .env has: DB_PASSWORD=honeynet123
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ SECTION 8 — WHAT THE AI DOES (Architecture Summary)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Every incoming honeypot event follows this pipeline:
+
+  [Attacker Device]
+       │
+       ▼
+  [Honeypot] (SSH / HTTP / FTP / Telnet / MySQL)
+       │  writes JSON log
+       ▼
+  [Log Watcher] (Node.js — src/services/logWatcher.js, dionaeaWatcher.js)
+       │  detects new line, normalises event fields
+       ▼
+  [Event Processor] (src/services/eventProcessor.js)
+       │  stores raw event in PostgreSQL
+       │
+       ├──► [GeoIP] ip-api.com (free, cached) → country, city, org
+       │
+       ├──► [ML Client] POST http://localhost:8001/classify
+       │         Isolation Forest anomaly detection
+       │         Autoencoder reconstruction error
+       │         → Returns: severity (LOW/MEDIUM/HIGH/CRITICAL), score
+       │
+       ├──► [Adaptation Service] (if severity = HIGH)
+       │         Dynamically changes SSH banner
+       │         Modifies honeyfiles (fake .env, SSH keys, AWS creds)
+       │         Triggers Cowrie restart
+       │
+       └──► [Alert Service] (if ENABLE_ALERTS=true)
+                Sends Slack / Discord / webhook notification
+
+  [PostgreSQL Database]
+       │  stores events, attackers, sessions, adaptations
+       ▼
+  [REST API] (Express — port 3000)
+       │
+       ▼
+  [React Dashboard] (Vite — port 5173)
+       Real-time auto-refresh every 5 seconds
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ END OF GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

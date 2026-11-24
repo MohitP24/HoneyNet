@@ -1,0 +1,28 @@
+# Secure FTP Honeypot Dockerfile
+FROM python:3.11-alpine
+
+# Security: Run as non-root user
+RUN addgroup -g 1000 ftphoney && \
+    adduser -D -u 1000 -G ftphoney ftphoney
+
+# Install only required dependencies
+RUN pip install --no-cache-dir pyftpdlib==1.5.9
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /var/log/ftp-honeypot /tmp/ftp_honeypot_files && \
+    chown -R ftphoney:ftphoney /var/log/ftp-honeypot /tmp/ftp_honeypot_files
+
+# Copy honeypot script
+COPY --chown=ftphoney:ftphoney ftp_honeypot_secure.py /app/ftp_honeypot.py
+
+# Switch to non-root user
+USER ftphoney
+
+WORKDIR /app
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('localhost', 2121)); s.close()" || exit 1
+
+# Run honeypot
+CMD ["python", "-u", "/app/ftp_honeypot.py"]

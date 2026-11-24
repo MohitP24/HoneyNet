@@ -1,0 +1,19 @@
+node_modules
+logs/*.log
+.env
+.git
+.gitignore
+README.md
+*.md
+. dockerignore
+Dockerfile
+docker-compose.yml
+.vscode
+.idea
+coverage
+.nyc_output
+test
+*.test.js
+ml-service
+frontend
+merged_full_dataset*.csv

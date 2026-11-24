@@ -1,0 +1,46 @@
+# Python
+venv/
+ml-service/venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node
+node_modules/
+**/node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# Training dumps
+*.csv
+merged_full_dataset*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# ML model caches (large binary files — keep .pkl and .keras in repo)
+ml-service/__pycache__/
+
+# Mock data runtime files (auto-created on start, not source)
+mock-data/honeyfs/
+mock-data/downloads/
+mock-data/ftp_files/
+mock-data/telnet_honeypot.json
+mock-data/mysql_honeypot.json
+
+# Scratch / temp
+brain/
+*.tmp
