@@ -44,3 +44,7 @@ mock-data/mysql_honeypot.json
 # Scratch / temp
 brain/
 *.tmp
+
+# Editor & runtime logs
+.vscode/
+cowrie-logs/
